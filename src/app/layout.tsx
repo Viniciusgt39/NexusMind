@@ -22,14 +22,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+       <head>
+         {/* Standard meta tags and links go here */}
+         <meta name="viewport" content="width=device-width, initial-scale=1" />
+         {/* Other head elements like links, scripts can be added */}
+       </head>
       <body
         className={cn(
           inter.variable, // Apply the font variable
           'antialiased font-sans flex flex-col min-h-screen bg-background' // Ensure background color takes effect
         )}
       >
-        {/* Increased margin-bottom to ensure content doesn't overlap with potentially taller nav bar */}
-        <main className="flex-grow container mx-auto px-4 py-6 mb-20 sm:mb-16">
+        {/* Reduced the margin bottom for mobile, keeping it for sm and up */}
+        <main className="flex-grow container mx-auto px-4 py-6 mb-12 sm:mb-16">
           {children}
         </main>
         <BottomNav />
