@@ -1,16 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { TrendingUp, AlertTriangle, CheckCircle, CalendarDays } from "lucide-react";
+import { TrendingUp, AlertTriangle, CheckCircle, CalendarDays, Star } from "lucide-react"; // Added Star icon
 
-// Simulated timeline data
+// Simulated timeline data (Translated and including achievement)
 const timelineEvents = [
-  { date: "2024-07-15", type: "check-in", mood: "Happy", description: "Felt productive and calm." },
-  { date: "2024-07-16", type: "event", description: "Started new project at work." },
-  { date: "2024-07-18", type: "check-in", mood: "Anxious", description: "Feeling overwhelmed by deadlines." },
-  { date: "2024-07-20", type: "crisis", description: "High stress levels detected, triggered coping exercise." },
-  { date: "2024-07-21", type: "check-in", mood: "Neutral", description: "Feeling a bit better after the exercise." },
-  { date: "2024-07-22", type: "event", description: "Therapy Session" },
-  { date: "2024-07-23", type: "achievement", description: "Completed 5 guided breathing sessions this week!" },
+  { date: "15/07/2024", type: "check-in", mood: "Feliz", description: "Senti-me produtivo(a) e calmo(a)." },
+  { date: "16/07/2024", type: "event", description: "Comecei um novo projeto no trabalho." },
+  { date: "18/07/2024", type: "check-in", mood: "Ansioso", description: "Sentindo-me sobrecarregado(a) com prazos." },
+  { date: "20/07/2024", type: "crisis", description: "Níveis altos de estresse detectados, exercício de enfrentamento acionado." },
+  { date: "21/07/2024", type: "check-in", mood: "Neutro", description: "Sentindo-me um pouco melhor após o exercício." },
+  { date: "22/07/2024", type: "event", description: "Sessão de Terapia" },
+  { date: "23/07/2024", type: "achievement", description: "Completou 5 sessões de respiração guiada esta semana!" },
+  { date: "24/07/2024", type: "achievement", description: "Medalha 'Momento Consciente' conquistada!" }, // Added another achievement
 ];
 
 const getIcon = (type: string) => {
@@ -18,7 +19,7 @@ const getIcon = (type: string) => {
     case "check-in": return <CheckCircle className="w-4 h-4 text-blue-500" />;
     case "event": return <CalendarDays className="w-4 h-4 text-muted-foreground" />;
     case "crisis": return <AlertTriangle className="w-4 h-4 text-destructive" />;
-    case "achievement": return <TrendingUp className="w-4 h-4 text-accent" />;
+    case "achievement": return <Star className="w-4 h-4 text-accent" />; // Using Star icon for achievement
     default: return <CheckCircle className="w-4 h-4 text-muted-foreground" />;
   }
 };
@@ -28,7 +29,7 @@ const getBorderColor = (type: string) => {
     case "check-in": return "border-blue-500";
     case "event": return "border-muted-foreground";
     case "crisis": return "border-destructive";
-    case "achievement": return "border-accent";
+    case "achievement": return "border-accent"; // Using accent border for achievement
     default: return "border-muted-foreground";
   }
 }
@@ -37,13 +38,13 @@ const getBorderColor = (type: string) => {
 export default function TimelinePage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-foreground">Timeline</h1>
-      <p className="text-muted-foreground">View your emotional progress, significant events, and moments of challenge.</p>
+      <h1 className="text-2xl font-semibold text-foreground">Linha do Tempo</h1>
+      <p className="text-muted-foreground">Veja seu progresso emocional, eventos significativos, conquistas e momentos de desafio.</p>
 
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle>Your Journey</CardTitle>
-          <CardDescription>A summary of recent activity.</CardDescription>
+          <CardTitle>Sua Jornada</CardTitle>
+          <CardDescription>Um resumo da atividade recente.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative pl-6">
@@ -66,17 +67,18 @@ export default function TimelinePage() {
                     <p className="text-sm font-medium text-foreground">{event.date}</p>
                     <p className={cn(
                       "text-sm",
-                       event.type === 'crisis' ? 'text-destructive font-semibold' : 'text-muted-foreground'
+                       event.type === 'crisis' ? 'text-destructive font-semibold' : 'text-muted-foreground',
+                       event.type === 'achievement' ? 'text-accent font-semibold' : '' // Style achievement text
                      )}>
                       {event.description}
-                      {event.mood && ` (Mood: ${event.mood})`}
+                      {event.mood && ` (Humor: ${event.mood})`}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-           <p className="text-xs text-muted-foreground mt-6 text-center">(Static visualization - data is simulated)</p>
+           <p className="text-xs text-muted-foreground mt-6 text-center">(Visualização estática - dados simulados)</p>
         </CardContent>
       </Card>
     </div>

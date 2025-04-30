@@ -16,12 +16,12 @@ const formatTime = (seconds: number): string => {
 };
 
 export default function AdhdTimer() {
-  const [initialMinutes, setInitialMinutes] = useState(25); // Default Pomodoro time
+  const [initialMinutes, setInitialMinutes] = useState(25); // Tempo padrão do Pomodoro
   const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Effect to handle the timer countdown (runs only client-side)
+  // Efeito para lidar com a contagem regressiva do timer (roda apenas no lado do cliente)
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
       intervalRef.current = setInterval(() => {
@@ -33,12 +33,14 @@ export default function AdhdTimer() {
       }
       if (timeLeft === 0 && isRunning) {
          setIsRunning(false);
-         // Optionally add a notification/sound here
-         alert("Time's up!");
+         // Opcionalmente, adicione uma notificação/som aqui
+         if (typeof window !== 'undefined') { // Check if running in browser
+            alert("Tempo esgotado!");
+         }
       }
     }
 
-    // Cleanup interval on component unmount or when dependencies change
+    // Limpa o intervalo ao desmontar o componente ou quando as dependências mudam
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -46,9 +48,9 @@ export default function AdhdTimer() {
     };
   }, [isRunning, timeLeft]);
 
-   // Effect to update timeLeft when initialMinutes changes (client-side safe)
+   // Efeito para atualizar timeLeft quando initialMinutes muda (seguro no lado do cliente)
    useEffect(() => {
-     // Only reset if timer is not running
+     // Apenas reseta se o timer não estiver rodando
      if (!isRunning) {
        setTimeLeft(initialMinutes * 60);
      }
@@ -63,17 +65,17 @@ export default function AdhdTimer() {
 
   const handleReset = () => {
     setIsRunning(false);
-    setTimeLeft(initialMinutes * 60); // Reset to current initialMinutes value
+    setTimeLeft(initialMinutes * 60); // Reseta para o valor atual de initialMinutes
   };
 
   const handleMinutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
      const newMinutes = parseInt(e.target.value, 10);
      if (!isNaN(newMinutes) && newMinutes > 0) {
         setInitialMinutes(newMinutes);
-        // No need to setTimeLeft here, useEffect handles it based on isRunning state
+        // Não precisa definir setTimeLeft aqui, o useEffect lida com isso baseado no estado isRunning
      } else if (e.target.value === '') {
-        // Allow clearing the input, maybe default to 1 or keep the last valid state
-        setInitialMinutes(1); // Or some default minimum
+        // Permite limpar a entrada, talvez padrão para 1 ou mantém o último estado válido
+        setInitialMinutes(1); // Ou algum mínimo padrão
      }
    };
 
@@ -83,17 +85,17 @@ export default function AdhdTimer() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TimerIcon className="w-5 h-5 text-primary" />
-          Focus Timer
+          Timer de Foco
         </CardTitle>
-        <CardDescription>Manage your time for work and breaks.</CardDescription>
+        <CardDescription>Gerencie seu tempo para trabalho e pausas.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center space-y-4">
          <div className="text-6xl font-mono font-semibold text-foreground tabular-nums">
-           {/* Display formatted time */}
+           {/* Exibe tempo formatado */}
            {formatTime(timeLeft)}
          </div>
           <div className="flex items-center space-x-2">
-            <label htmlFor="timer-minutes" className="text-sm text-muted-foreground">Set minutes:</label>
+            <label htmlFor="timer-minutes" className="text-sm text-muted-foreground">Definir minutos:</label>
              <Input
                 id="timer-minutes"
                 type="number"
@@ -101,17 +103,17 @@ export default function AdhdTimer() {
                 value={initialMinutes}
                 onChange={handleMinutesChange}
                 className="w-16 h-8 text-center"
-                disabled={isRunning} // Disable input while running
+                disabled={isRunning} // Desabilita a entrada enquanto está rodando
               />
           </div>
          <div className="flex space-x-3">
            <Button onClick={handleStartPause} disabled={timeLeft <= 0 && !isRunning}>
              {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-             {isRunning ? "Pause" : "Start"}
+             {isRunning ? "Pausar" : "Iniciar"}
            </Button>
            <Button variant="outline" onClick={handleReset}>
              <RotateCcw className="w-4 h-4 mr-1" />
-             Reset
+             Resetar
            </Button>
          </div>
       </CardContent>

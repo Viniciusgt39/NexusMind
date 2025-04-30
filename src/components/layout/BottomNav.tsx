@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/", label: "Início", icon: Home },
   { href: "/check-in", label: "Check-in", icon: Smile },
-  { href: "/chat", label: "AI Chat", icon: MessageCircle },
-  { href: "/timeline", label: "Timeline", icon: BarChart3 },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/chat", label: "Chat IA", icon: MessageCircle },
+  { href: "/timeline", label: "Linha Tempo", icon: BarChart3 },
+  { href: "/profile", label: "Perfil", icon: User },
 ];
 
 export default function BottomNav() {

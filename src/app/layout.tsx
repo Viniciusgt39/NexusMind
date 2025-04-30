@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'NexusMind',
-  description: 'Wearable-focused solution for mental health',
+  description: 'Solução focada em vestíveis para saúde mental', // Translated
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR"> {/* Set language to Portuguese (Brazil) */}
       <body
         className={cn(
           geistSans.variable,

@@ -10,8 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle } from 'lucide-react';
 
 
-const moods = ["Happy", "Calm", "Neutral", "Sad", "Anxious", "Angry"];
-const symptoms = ["Fatigue", "Irritability", "Difficulty Concentrating", "Low Motivation", "Sleep Issues", "Restlessness"];
+const moods = ["Feliz", "Calmo", "Neutro", "Triste", "Ansioso", "Irritado"];
+const symptoms = ["Fadiga", "Irritabilidade", "Dificuldade de Concentração", "Baixa Motivação", "Problemas de Sono", "Inquietação"];
 
 export default function CheckInPage() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
@@ -29,14 +29,14 @@ export default function CheckInPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would send this data to a backend.
+    // Em um aplicativo real, você enviaria esses dados para um backend.
     console.log({ selectedMood, selectedSymptoms, notes });
     toast({
-      title: "Check-in Logged",
-      description: "Your emotional state has been recorded.",
-       action: <CheckCircle className="text-green-500" />, // Using a success accent color
+      title: "Check-in Registrado",
+      description: "Seu estado emocional foi registrado.",
+       action: <CheckCircle className="text-green-500" />, // Usando uma cor de destaque de sucesso
     });
-    // Reset form (optional)
+    // Resetar formulário (opcional)
      setSelectedMood(null);
      setSelectedSymptoms([]);
      setNotes("");
@@ -45,14 +45,14 @@ export default function CheckInPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-foreground">Emotional Check-in</h1>
-      <p className="text-muted-foreground">Take a moment to reflect on how you're feeling right now.</p>
+      <h1 className="text-2xl font-semibold text-foreground">Check-in Emocional</h1>
+      <p className="text-muted-foreground">Tire um momento para refletir sobre como você está se sentindo agora.</p>
 
       <form onSubmit={handleSubmit}>
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle>How are you feeling?</CardTitle>
-            <CardDescription>Select the mood that best describes you.</CardDescription>
+            <CardTitle>Como você está se sentindo?</CardTitle>
+            <CardDescription>Selecione o humor que melhor descreve você.</CardDescription>
           </CardHeader>
           <CardContent>
              <RadioGroup
@@ -74,8 +74,8 @@ export default function CheckInPage() {
 
         <Card className="shadow-md mt-6">
           <CardHeader>
-            <CardTitle>Any specific symptoms?</CardTitle>
-            <CardDescription>Select any symptoms you're experiencing (optional).</CardDescription>
+            <CardTitle>Algum sintoma específico?</CardTitle>
+            <CardDescription>Selecione quaisquer sintomas que você esteja experimentando (opcional).</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -96,12 +96,12 @@ export default function CheckInPage() {
 
         <Card className="shadow-md mt-6">
            <CardHeader>
-             <CardTitle>Additional Notes</CardTitle>
-             <CardDescription>Add any extra details about your current state (optional).</CardDescription>
+             <CardTitle>Notas Adicionais</CardTitle>
+             <CardDescription>Adicione quaisquer detalhes extras sobre seu estado atual (opcional).</CardDescription>
            </CardHeader>
            <CardContent>
              <Textarea
-               placeholder="E.g., Feeling overwhelmed by workload..."
+               placeholder="Ex.: Sentindo-me sobrecarregado(a) com o trabalho..."
                value={notes}
                onChange={(e) => setNotes(e.target.value)}
                rows={4}
@@ -111,7 +111,7 @@ export default function CheckInPage() {
 
 
         <Button type="submit" className="w-full mt-6">
-          Log Check-in
+          Registrar Check-in
         </Button>
       </form>
     </div>
