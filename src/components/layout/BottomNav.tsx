@@ -22,8 +22,10 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
+    // overflow-x-auto enables horizontal scrolling/dragging when items overflow
     <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-50 overflow-x-auto">
-      <div className="container mx-auto flex justify-around items-center h-16 px-1 sm:px-4">
+      {/* Removed container mx-auto to allow full-width scrolling if needed, added min-w-max to ensure content determines width */}
+      <div className="flex justify-around items-center h-16 px-1 sm:px-4 min-w-max">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
