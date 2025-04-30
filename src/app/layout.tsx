@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR"> {/* Set language to Portuguese (Brazil) */}
+    <html lang="pt-BR">{/* Set language to Portuguese (Brazil) */}
       <body
         className={cn(
           geistSans.variable,
