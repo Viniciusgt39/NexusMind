@@ -1,9 +1,9 @@
 'use server';
 
 /**
- * @fileOverview Fornece respostas empáticas à entrada do usuário usando um chatbot de IA.
+ * @fileOverview Fornece respostas empáticas à entrada do usuário usando o modelo Gemini da Google AI.
  *
- * - empatheticResponse - Uma função que recebe a entrada do usuário e retorna uma resposta empática.
+ * - empatheticResponse - Uma função que recebe a entrada do usuário e retorna uma resposta empática gerada pela IA.
  * - EmpatheticResponseInput - O tipo de entrada para a função empatheticResponse.
  * - EmpatheticResponseOutput - O tipo de retorno para a função empatheticResponse.
  */
@@ -17,7 +17,7 @@ const EmpatheticResponseInputSchema = z.object({
 export type EmpatheticResponseInput = z.infer<typeof EmpatheticResponseInputSchema>;
 
 const EmpatheticResponseOutputSchema = z.object({
-  chatbotResponse: z.string().describe('A resposta empática do chatbot.'),
+  chatbotResponse: z.string().describe('A resposta empática gerada pela IA.'),
 });
 export type EmpatheticResponseOutput = z.infer<typeof EmpatheticResponseOutputSchema>;
 
@@ -25,39 +25,10 @@ export async function empatheticResponse(input: EmpatheticResponseInput): Promis
   return empatheticResponseFlow(input);
 }
 
-// Placeholder for empathetic responses (can be improved or replaced with a more sophisticated model/service)
-const empatheticResponsesPT = [
-  "Entendo que este é um momento difícil para você.",
-  "Seus sentimentos são válidos e estou aqui para te apoiar.",
-  "É preciso coragem para compartilhar o que você está passando.",
-  "Estou aqui para ouvir sem julgamentos.",
-  "Lembre-se que você não está sozinho(a) nisso.",
-  "Sinto muito que você esteja passando por isso.",
-  "É compreensível se sentir assim.",
-  "Permita-se sentir o que precisa sentir agora.",
-  "Respire fundo, estou aqui com você.",
-  "Você é forte por lidar com isso."
-];
-
-const empatheticResponseTool = ai.defineTool({
-  name: 'getEmpatheticResponse',
-  description: 'Fornece uma resposta empática e de apoio com base na entrada do usuário.',
-  inputSchema: z.object({
-    userInput: z.string().describe('A entrada do usuário para gerar uma resposta empática.'),
-  }),
-  outputSchema: z.string(),
-},
-async (input) => {
-  // In a real application, this might call a more sophisticated LLM or service.
-  // This uses a predefined list for demonstration.
-  // The Math.random part must run client-side or be replaced by a server-safe method if used server-side directly.
-  // Since Genkit tools run server-side, Math.random is acceptable here *within the tool's execution context*.
-  const randomIndex = Math.floor(Math.random() * empatheticResponsesPT.length);
-  return empatheticResponsesPT[randomIndex];
-});
-
 const empatheticResponsePrompt = ai.definePrompt({
   name: 'empatheticResponsePrompt',
+  // Use a capable model for nuanced empathetic responses
+  model: 'googleai/gemini-1.5-flash',
   input: {
     schema: z.object({
       userInput: z.string().describe('A entrada do usuário a ser processada pelo chatbot.'),
@@ -65,14 +36,19 @@ const empatheticResponsePrompt = ai.definePrompt({
   },
   output: {
     schema: z.object({
-      chatbotResponse: z.string().describe('A resposta empática do chatbot.'),
+      chatbotResponse: z.string().describe('A resposta empática gerada pela IA.'),
     }),
   },
-   // Prompt updated to reflect the tool's purpose
-  prompt: `Um usuário forneceu a seguinte entrada: "{{userInput}}". Use a ferramenta 'getEmpatheticResponse' para gerar uma resposta empática e de apoio. Retorne APENAS a resposta do chatbot.`,
-  tools: [empatheticResponseTool],
-  // System message translated and emphasizing empathy
-  system: `Você é um assistente de IA prestativo e empático, projetado para fornecer apoio e compreensão aos usuários em sofrimento. Sempre responda de uma forma que valide os sentimentos do usuário e ofereça encorajamento. Use a ferramenta 'getEmpatheticResponse' para formular sua resposta.`,
+  // Updated prompt to leverage Gemini's capabilities directly
+  prompt: `O usuário compartilhou o seguinte: "{{userInput}}". Responda com empatia, validação e apoio. Mantenha a resposta concisa, calorosa e encorajadora. Concentre-se em ouvir e oferecer conforto, não em resolver problemas, a menos que seja explicitamente solicitado.`,
+  // System message emphasizing the AI's role
+  system: `Você é NexusMind, um assistente de IA compassivo e empático, parte de um aplicativo de saúde mental. Seu objetivo é fornecer um espaço seguro e de apoio para os usuários expressarem seus sentimentos. Responda sempre com gentileza, compreensão e validação. Evite dar conselhos médicos ou diagnósticos. Mantenha um tom positivo e encorajador. Fale em Português do Brasil.`,
+  // No tools needed as we are generating the response directly
+  tools: [],
+  config: {
+     temperature: 0.7, // Adjust for creativity vs. predictability
+     maxOutputTokens: 150, // Limit response length
+  }
 });
 
 const empatheticResponseFlow = ai.defineFlow<
@@ -83,8 +59,11 @@ const empatheticResponseFlow = ai.defineFlow<
   inputSchema: EmpatheticResponseInputSchema,
   outputSchema: EmpatheticResponseOutputSchema,
 }, async (input) => {
-  // Call the prompt, which will decide whether/how to use the tool
+  // Directly call the prompt with the input
   const {output} = await empatheticResponsePrompt(input);
   // Ensure output is not null before returning
-  return output!;
+  if (!output) {
+     throw new Error("A IA não conseguiu gerar uma resposta.");
+  }
+  return output;
 });
