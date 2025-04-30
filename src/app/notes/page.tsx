@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label"; // Added import for Label
 import { PlusCircle, Trash2, Save, Edit, StickyNote, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
@@ -84,7 +85,7 @@ export default function NotesPage() {
       // Add new note
       const newNote: Note = {
         id: now.toString(), // Use timestamp as simple ID
-        title: currentTitle.trim() || `Nota ${format(now, 'dd/MM/yy HH:mm')}`, // Default title
+        title: currentTitle.trim() || `Nota ${format(now, 'dd/MM/yy HH:mm', { locale: ptBR })}`, // Default title
         content: currentContent.trim(),
         createdAt: now,
         updatedAt: now,
@@ -143,7 +144,7 @@ export default function NotesPage() {
                    id="note-title"
                    value={currentTitle}
                    onChange={(e) => setCurrentTitle(e.target.value)}
-                   placeholder={`Ex: Ideias Reunião, Sentimentos ${format(Date.now(), 'dd/MM')}`}
+                   placeholder={`Ex: Ideias Reunião, Sentimentos ${format(Date.now(), 'dd/MM', { locale: ptBR })}`}
                  />
                </div>
                <div>
@@ -184,7 +185,7 @@ export default function NotesPage() {
                  <Card key={note.id} className="shadow-md rounded-lg hover:shadow-lg transition-shadow">
                    <CardHeader className="flex flex-row justify-between items-start gap-2 pb-2">
                       <div>
-                          <CardTitle className="text-lg">{note.title || `Nota ${format(note.createdAt, 'dd/MM/yy')}`}</CardTitle>
+                          <CardTitle className="text-lg">{note.title || `Nota ${format(note.createdAt, 'dd/MM/yy', { locale: ptBR })}`}</CardTitle>
                           <CardDescription className="text-xs">
                             Última atualização: {format(note.updatedAt, 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                           </CardDescription>
