@@ -23,10 +23,10 @@ import {
   Settings,
   BarChart3,
   CalendarPlus,
-  PanelLeft, // Keep PanelLeft for trigger
   Brain,
   LogOut, // Added logout icon
   Menu, // Added Menu icon for standard trigger
+  ChevronLeft, // Added ChevronLeft for close trigger
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -40,12 +40,12 @@ const menuItems = [
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
-// Custom SidebarTrigger using Menu icon
+// Custom SidebarTrigger using Menu icon or ChevronLeft
 const CustomSidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar();
+  const { open, toggleSidebar } = useSidebar(); // Get open state
 
   return (
     <Button
@@ -60,7 +60,7 @@ const CustomSidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <Menu className="w-5 h-5" /> {/* Use Menu icon */}
+      {open ? <ChevronLeft className="w-5 h-5" /> : <Menu className="w-5 h-5" />} {/* Conditional icon */}
       <span className="sr-only">Alternar Menu Lateral</span>
     </Button>
   );
@@ -114,7 +114,8 @@ export function AppSidebar() {
       </SidebarHeader>
 
        {/* User Info Section - Moved below header */}
-       <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+       {/* Use padding-bottom to avoid overlap with fixed BottomNav on mobile when open */}
+       <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200 pb-4 mb-auto", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
          <div className="flex items-center gap-2">
            <Avatar className="w-8 h-8 shrink-0">
              <AvatarImage src="/placeholder-user.png" alt="User Avatar" data-ai-hint="person silhouette" />
@@ -172,7 +173,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-2 border-t border-sidebar-border mt-auto"> {/* Added mt-auto */}
+      <SidebarFooter className="p-2 border-t border-sidebar-border"> {/* Removed mt-auto to allow user info to push it down */}
          {/* Logout Button */}
          <SidebarMenu>
             <SidebarMenuItem>

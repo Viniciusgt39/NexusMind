@@ -55,9 +55,9 @@ export default function Home() {
   // Simulate oscillating data (Client-side only)
   useEffect(() => {
     const bioIntervalId = setInterval(() => {
-      setHeartRate(Math.floor(Math.random() * (100 - 70 + 1)) + 70);
-      setHrv(Math.floor(Math.random() * (90 - 65 + 1)) + 65);
-      setEda(+(Math.random() * (1.0 - 0.8) + 0.8).toFixed(1));
+      setHeartRate(Math.floor(Math.random() * (100 - 70 + 1)) + 70); // Oscillate between 70 and 100 bpm
+      setHrv(Math.floor(Math.random() * (90 - 65 + 1)) + 65); // Oscillate between 65 and 90 ms
+      setEda(+(Math.random() * (1.0 - 0.8) + 0.8).toFixed(1)); // Oscillate between 0.8 and 1.0 µS
     }, 2000); // Update every 2 seconds
 
     const screenTimeIntervalId = setInterval(() => {
@@ -169,6 +169,19 @@ export default function Home() {
           </CardContent>
       </Card>
 
+      {/* Guided Breathing Section - Moved below Alert */}
+      <Card className="shadow-md rounded-xl">
+        <CardHeader>
+          <CardTitle>Respiração Guiada</CardTitle>
+          <CardDescription>Tire um momento para relaxar e se recentrar.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground" onClick={() => setShowBreathingAnimation(true)}>
+            Iniciar Exercício de Respiração
+          </Button>
+        </CardContent>
+      </Card>
+
        {/* Focus Tools Section with Tabs */}
        <Card className="shadow-lg rounded-xl">
           <CardHeader>
@@ -193,19 +206,6 @@ export default function Home() {
           </CardContent>
        </Card>
 
-
-      {/* Guided Breathing Section */}
-      <Card className="shadow-md rounded-xl">
-        <CardHeader>
-          <CardTitle>Respiração Guiada</CardTitle>
-          <CardDescription>Tire um momento para relaxar e se recentrar.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground" onClick={() => setShowBreathingAnimation(true)}>
-            Iniciar Exercício de Respiração
-          </Button>
-        </CardContent>
-      </Card>
 
       {/* Insights Section */}
       <Card className="shadow-md rounded-xl bg-accent/10 border-accent">
