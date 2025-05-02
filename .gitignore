@@ -3,12 +3,8 @@
 # dependencies
 /node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
+.yarn/install-state.gz
 
 # testing
 /coverage
@@ -28,14 +24,14 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+# vscode
+.vscode
+# local env files
+.env*.local
 
-# vercel
-.vercel
+# turbo cache
+.turbo
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-.genkit/*
-.env*
+# IDX specific files
+*.idx
+.idx/
