@@ -4,12 +4,12 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { HeartPulse, Activity, Zap, AlarmClock, StickyNote, Brain, BarChartHorizontalBig, MessageSquareWarning, PhoneOutgoing, Smartphone, Clock, Lightbulb, Timer } from "lucide-react"; // Added Timer
+import { HeartPulse, Activity, Zap, StickyNote, Brain, BarChartHorizontalBig, MessageSquareWarning, PhoneOutgoing, Smartphone, Clock, Lightbulb, Timer } from "lucide-react"; // Removed AlarmClock
 import AdhdTimer from "@/components/features/AdhdTimer";
 import BreathingAnimation from "@/components/features/BreathingAnimation";
 import { useToast } from "@/hooks/use-toast";
-import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line } from 'recharts'; // Removed Tooltip as ChartTooltip is used
-import { ChartTooltipContent, ChartContainer, ChartTooltip } from '@/components/ui/chart'; // Added ChartTooltip import
+import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line, Tooltip as RechartsTooltip } from 'recharts'; // Keep RechartsTooltip for basic hover info
+import { ChartTooltipContent, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 
 // Simulated data for the chart
 const chartData = [
@@ -99,8 +99,8 @@ export default function Home() {
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
                     <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel />} // Use ChartTooltipContent for the tooltip UI
+                      cursor={true} // Enable cursor for better hover experience
+                      content={<ChartTooltipContent indicator="line" />} // Use custom styled tooltip
                       />
                     <Line type="monotone" dataKey="fc" stroke="var(--color-fc)" strokeWidth={2} dot={false} />
                     <Line type="monotone" dataKey="vfc" stroke="var(--color-vfc)" strokeWidth={2} dot={false} />
@@ -182,28 +182,14 @@ export default function Home() {
        <Card className="shadow-md rounded-xl">
           <CardHeader>
              <CardTitle className="flex items-center gap-2">
-                <Timer className="w-5 h-5 text-primary" /> Ferramentas de Apoio para TDAH
+                <Timer className="w-5 h-5 text-primary" /> Ferramentas de Apoio
               </CardTitle>
-             <CardDescription>Acesso rápido a ferramentas para foco e organização.</CardDescription>
+             <CardDescription>Acesso rápido ao timer de foco.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
              {/* ADHD Timer Component */}
              <AdhdTimer />
-
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                 {/* Placeholder for Alarm */}
-                 <Button variant="outline" className="w-full justify-start gap-2">
-                    <AlarmClock className="w-5 h-5 text-primary" />
-                    <span>Definir Alarme</span>
-                 </Button>
-
-                 {/* Placeholder for Notepad */}
-                 <Button variant="outline" className="w-full justify-start gap-2">
-                    <StickyNote className="w-5 h-5 text-primary" />
-                    <span>Notas Rápidas</span>
-                 </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">(Funcionalidades de Alarme e Bloco de Notas são simuladas/placeholders)</p>
+             {/* Removed placeholder buttons for Alarm and Notes */}
           </CardContent>
        </Card>
 

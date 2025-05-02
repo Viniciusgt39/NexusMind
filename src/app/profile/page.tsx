@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileText, Download, Settings } from "lucide-react";
+import { FileText, Download } from "lucide-react"; // Removed Settings icon
 // Removed AdhdTimer import as the section is moved
 
 export default function ProfilePage() {
@@ -9,10 +9,7 @@ export default function ProfilePage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-foreground">Perfil e Relatórios</h1>
-         <Button variant="ghost" size="icon">
-            <Settings className="w-5 h-5" />
-            <span className="sr-only">Configurações</span>
-         </Button>
+         {/* Settings button removed */}
       </div>
 
       <Card className="shadow-md">

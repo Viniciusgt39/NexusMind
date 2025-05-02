@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Smile, MessageCircle, BarChart3, User, Watch, Lightbulb, StickyNote, Pill } from "lucide-react";
+import { Home, Smile, MessageCircle, Lightbulb, StickyNote, Pill } from "lucide-react"; // Removed Watch, BarChart3, User
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -10,12 +10,12 @@ const navItems = [
   { href: "/", label: "Início", icon: Home },
   { href: "/check-in", label: "Check-in", icon: Smile },
   { href: "/chat", label: "Chat IA", icon: MessageCircle },
-  { href: "/timeline", label: "Linha Tempo", icon: BarChart3 },
-  { href: "/bracelet", label: "Dispositivo", icon: Watch }, // New: Bracelet
-  { href: "/insights", label: "Insights", icon: Lightbulb }, // New: Insights
-  { href: "/notes", label: "Notas", icon: StickyNote }, // New: Notes
-  { href: "/medications", label: "Medicação", icon: Pill }, // New: Medications
-  { href: "/profile", label: "Perfil", icon: User },
+  // Removed Timeline { href: "/timeline", label: "Linha Tempo", icon: BarChart3 },
+  // Removed Bracelet { href: "/bracelet", label: "Dispositivo", icon: Watch },
+  { href: "/insights", label: "Insights", icon: Lightbulb },
+  { href: "/notes", label: "Notas", icon: StickyNote },
+  { href: "/medications", label: "Medicação", icon: Pill },
+  // Removed Profile { href: "/profile", label: "Perfil", icon: User },
 ];
 
 export default function BottomNav() {
