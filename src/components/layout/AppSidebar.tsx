@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react'; // Added missing React import
+import React from 'react'; // Ensure React is imported
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -30,7 +30,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator"; // Added Separator
-import { SidebarTrigger } from "@/components/ui/sidebar"; // Import default trigger if needed, or keep using custom
+import { useAuth } from '@/hooks/useAuth'; // Import useAuth
+
 
 // Reordered menu items for priority
 const menuItems = [
@@ -70,6 +71,7 @@ CustomSidebarTrigger.displayName = "CustomSidebarTrigger";
 export function AppSidebar() {
   const pathname = usePathname();
   const { toast } = useToast();
+  const { user } = useAuth(); // Get user from auth context
   const { open, openMobile, setOpenMobile } = useSidebar();
 
   const handleScheduleAppointment = () => {
@@ -88,7 +90,7 @@ export function AppSidebar() {
        title: "Logout (Simulação)",
        description: "Você foi desconectado.",
      });
-     // Add actual logout logic here
+     // Add actual logout logic here (e.g., call firebase signOut)
      if (openMobile) {
        setOpenMobile(false);
      }
@@ -99,7 +101,7 @@ export function AppSidebar() {
     <Sidebar
       side="left"
       variant="sidebar" // Use 'sidebar' variant for standard behavior
-      collapsible="icon" // Allow collapsing to icons
+      collapsible="icon" // **Ensure sidebar is collapsible**
       className="border-r border-sidebar-border"
     >
       <SidebarHeader className="items-center justify-between p-2"> {/* Ensure padding */}
@@ -113,18 +115,20 @@ export function AppSidebar() {
 
        {/* User Info Section - Moved below header */}
        {/* Use padding-bottom to avoid overlap with fixed BottomNav on mobile when open */}
-       <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200 pb-4 mb-auto", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
-         <div className="flex items-center gap-2">
-           <Avatar className="w-8 h-8 shrink-0">
-             <AvatarImage src="/placeholder-user.png" alt="User Avatar" data-ai-hint="person silhouette" />
-             <AvatarFallback>A</AvatarFallback>
-           </Avatar>
-           <div className="text-xs overflow-hidden"> {/* Added overflow-hidden */}
-             <p className="font-medium text-sidebar-foreground whitespace-nowrap truncate">Alex Johnson</p>
-             <p className="text-muted-foreground whitespace-nowrap truncate">alex.j@email.com</p>
-           </div>
-         </div>
-       </div>
+       {user && (
+        <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200 pb-4 mb-auto", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+            <div className="flex items-center gap-2">
+            <Avatar className="w-8 h-8 shrink-0">
+                <AvatarImage src={user.photoURL || "/placeholder-user.png"} alt="User Avatar" data-ai-hint="person silhouette" />
+                <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+            </Avatar>
+            <div className="text-xs overflow-hidden"> {/* Added overflow-hidden */}
+                <p className="font-medium text-sidebar-foreground whitespace-nowrap truncate">{user.displayName || "Usuário"}</p>
+                <p className="text-muted-foreground whitespace-nowrap truncate">{user.email || ""}</p>
+            </div>
+            </div>
+        </div>
+       )}
 
       <SidebarContent className="p-2 flex-1 overflow-y-auto">
         <SidebarMenu>
@@ -175,22 +179,26 @@ export function AppSidebar() {
       <SidebarFooter className="p-2 border-t border-sidebar-border">
          <div className="flex items-center justify-between">
             {/* Logout Button */}
-            <SidebarMenu className="flex-grow"> {/* Allow menu to take space */}
-               <SidebarMenuItem>
-                   <SidebarMenuButton
-                      onClick={handleLogout}
-                      tooltip="Sair"
-                      className="justify-start text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive w-full" // Make button take available width in flex item
-                   >
-                    <LogOut className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
-                    <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
-                      Sair
-                    </span>
-                  </SidebarMenuButton>
-               </SidebarMenuItem>
-            </SidebarMenu>
+            {user && ( // Show logout only if user is logged in
+                <SidebarMenu className="flex-grow"> {/* Allow menu to take space */}
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        onClick={handleLogout}
+                        tooltip="Sair"
+                        className="justify-start text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive w-full" // Make button take available width in flex item
+                    >
+                        <LogOut className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
+                        <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+                        Sair
+                        </span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                </SidebarMenu>
+            )}
+            {!user && <div className="flex-grow"></div>} {/* Spacer if no user */}
+
              {/* Sidebar Toggle Button - Visible only on desktop */}
-             <CustomSidebarTrigger className="hidden md:flex ml-2 shrink-0" /> {/* Added ml-2 for spacing, shrink-0 */}
+             <CustomSidebarTrigger className="hidden md:flex ml-auto shrink-0" /> {/* Position toggle to the far right */}
          </div>
       </SidebarFooter>
     </Sidebar>

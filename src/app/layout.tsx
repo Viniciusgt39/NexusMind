@@ -36,7 +36,7 @@ export default function RootLayout({
           'antialiased font-sans flex flex-col min-h-screen bg-background'
         )}
       >
-       <AuthProvider> {/* Wrap content with AuthProvider */}
+       <AuthProvider> {/* Wrap the entire content, including SidebarProvider */}
           <SidebarProvider>
              <div className="flex"> {/* Flex container for sidebar and main content */}
                 <AppSidebar /> {/* Add the sidebar */}
