@@ -13,7 +13,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { firestore } from '@/lib/firebase'; // Assuming firebase config is in lib/firebase
 import { collection, addDoc, query, where, getDocs, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, Timestamp } from "firebase/firestore";
-import { useAuth } from '@/hooks/useAuth'; // Assuming an authentication hook
+import { useAuth } from '@/hooks/useAuth'; // Import the actual useAuth hook
+import type { Locale } from 'date-fns'; // Import Locale type explicitly
 
 interface Note {
   id: string;
@@ -28,9 +29,20 @@ interface Note {
 const formatTimestampSafe = (timestamp: Timestamp | null | undefined, formatString: string, options?: { locale?: Locale }): string => {
     if (!timestamp) return '';
     try {
-        return format(timestamp.toDate(), formatString, options);
+        // Ensure timestamp is a Firestore Timestamp before calling toDate()
+        if (timestamp instanceof Timestamp) {
+          return format(timestamp.toDate(), formatString, options);
+        } else {
+           // Handle cases where it might be a standard Date object or invalid
+           console.warn("formatTimestampSafe received non-Timestamp object:", timestamp);
+           // Attempt to format if it's a Date object
+           if (timestamp instanceof Date) {
+              return format(timestamp, formatString, options);
+           }
+           return 'Data inválida';
+        }
     } catch (error) {
-        console.error("Error formatting timestamp:", error);
+        console.error("Error formatting timestamp:", error, timestamp);
         return 'Data inválida';
     }
 };
@@ -42,12 +54,19 @@ export default function NotesPage() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [currentTitle, setCurrentTitle] = useState("");
   const [currentContent, setCurrentContent] = useState("");
-  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [isLoading, setIsLoading] = useState(true); // Loading state for notes fetch
+  const [isSaving, setIsSaving] = useState(false); // Separate loading state for save/delete
   const { toast } = useToast();
-  const { user } = useAuth(); // Get authenticated user
+  const { user, loading: authLoading } = useAuth(); // Get user and auth loading state
 
   // Load notes from Firestore on mount (Client-side only)
   useEffect(() => {
+    // Wait for auth state to be determined
+    if (authLoading) {
+        setIsLoading(true); // Keep showing loading spinner while auth check happens
+        return;
+    }
+
     if (!user) {
       setIsLoading(false); // Stop loading if no user
       setNotes([]); // Clear notes if logged out
@@ -55,7 +74,7 @@ export default function NotesPage() {
     };
 
     const fetchNotes = async () => {
-      if (!user) return; // Extra check for safety
+      if (!user || !firestore) return; // Extra check for safety and Firestore availability
 
       setIsLoading(true);
       try {
@@ -77,7 +96,7 @@ export default function NotesPage() {
     };
 
     fetchNotes();
-  }, [user, toast]); // Depend on user state
+  }, [user, authLoading, toast]); // Depend on user and authLoading state
 
 
   const startAddingNote = () => {
@@ -110,13 +129,17 @@ export default function NotesPage() {
         toast({ title: "Nota Vazia", description: "A nota precisa ter um título ou conteúdo.", variant: "destructive" });
         return;
     }
+    if (!firestore) {
+        toast({ title: "Erro de Configuração", description: "O banco de dados não está disponível.", variant: "destructive" });
+        return;
+    }
 
 
     const now = serverTimestamp(); // Use server timestamp for consistency
     const trimmedTitle = currentTitle.trim();
     const trimmedContent = currentContent.trim();
 
-    setIsLoading(true); // Show loading state during save
+    setIsSaving(true); // Show loading state during save
 
     try {
       if (editingNoteId) {
@@ -132,7 +155,7 @@ export default function NotesPage() {
              note.id === editingNoteId
                ? { ...note, title: trimmedTitle, content: trimmedContent, updatedAt: Timestamp.now() } // Use client time for immediate UI update
                : note
-           )
+           ).sort((a, b) => b.updatedAt.toMillis() - a.updatedAt.toMillis()) // Re-sort after update
          );
         toast({ title: "Nota Atualizada", description: "Suas alterações foram salvas." });
       } else {
@@ -146,13 +169,15 @@ export default function NotesPage() {
         };
         const docRef = await addDoc(collection(firestore, "notes"), newNoteData);
         // Add the new note locally with the generated ID and client timestamp for immediate UI update
-         const addedNote: Note = {
-           ...newNoteData,
+         const addedNoteClient: Note = {
+           userId: newNoteData.userId,
+           title: newNoteData.title,
+           content: newNoteData.content,
            id: docRef.id,
            createdAt: Timestamp.now(), // Use client time for optimistic update
            updatedAt: Timestamp.now(),
          };
-         setNotes([addedNote, ...notes]);
+         setNotes([addedNoteClient, ...notes].sort((a, b) => b.updatedAt.toMillis() - a.updatedAt.toMillis())); // Add and re-sort
         toast({ title: "Nota Salva", description: "Sua nova nota foi adicionada." });
       }
       cancelEditing(); // Reset form state
@@ -160,17 +185,17 @@ export default function NotesPage() {
        console.error("Error saving note:", error);
        toast({ title: "Erro ao Salvar", description: "Não foi possível salvar a nota.", variant: "destructive" });
     } finally {
-        setIsLoading(false);
+        setIsSaving(false);
     }
   };
 
   const handleDeleteNote = async (id: string) => {
-    if (!user) return; // Should not happen if button is shown only when logged in
+    if (!user || !firestore) return; // Should not happen if button is shown only when logged in
 
     const noteToDelete = notes.find(note => note.id === id);
     if (!noteToDelete) return;
 
-    setIsLoading(true);
+    setIsSaving(true);
     try {
       const noteRef = doc(firestore, "notes", id);
       await deleteDoc(noteRef);
@@ -183,7 +208,7 @@ export default function NotesPage() {
        console.error("Error deleting note:", error);
        toast({ title: "Erro ao Excluir", description: "Não foi possível remover a nota.", variant: "destructive" });
     } finally {
-        setIsLoading(false);
+        setIsSaving(false);
     }
   };
 
@@ -203,18 +228,27 @@ export default function NotesPage() {
             <CardContent className="flex items-center justify-between">
                 <p className="text-muted-foreground">Capture ideias, sentimentos ou lembretes.</p>
                  {user && !isAdding && !editingNoteId && ( // Only show if logged in and not editing/adding
-                    <Button size="sm" onClick={startAddingNote} disabled={isLoading}>
+                    <Button size="sm" onClick={startAddingNote} disabled={isLoading || isSaving}>
                         <PlusCircle className="w-4 h-4 mr-2" /> Nova Nota
                     </Button>
                   )}
             </CardContent>
         </Card>
 
-        {!user && !isLoading && (
-           <Card className="shadow-md rounded-xl text-center p-6">
+        {/* Show loading indicator while checking auth */}
+        {authLoading && (
+            <div className="flex justify-center items-center p-8">
+                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                 <p className="ml-2 text-muted-foreground">Verificando autenticação...</p>
+             </div>
+        )}
+
+        {/* Show login prompt if not logged in and auth check is complete */}
+        {!user && !authLoading && (
+           <Card className="shadow-md rounded-xl text-center p-6 bg-secondary/30">
               <CardTitle>Login Necessário</CardTitle>
               <CardDescription>Faça login para criar e visualizar suas notas.</CardDescription>
-              {/* Add a login button/link here */}
+              {/* Add a login button/link here if needed, or rely on sidebar login */}
            </Card>
         )}
 
@@ -232,7 +266,7 @@ export default function NotesPage() {
                     value={currentTitle}
                     onChange={(e) => setCurrentTitle(e.target.value)}
                     placeholder={`Ex: Ideias Reunião, Sentimentos ${format(Date.now(), 'dd/MM', { locale: ptBR })}`}
-                    disabled={isLoading}
+                    disabled={isSaving} // Disable during save/delete
                   />
                 </div>
                 <div>
@@ -243,20 +277,20 @@ export default function NotesPage() {
                     onChange={(e) => setCurrentContent(e.target.value)}
                     placeholder="Digite sua nota aqui..."
                     rows={6}
-                    disabled={isLoading}
+                    disabled={isSaving}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                   <Button variant="ghost" onClick={cancelEditing} disabled={isLoading}>
+                   <Button variant="ghost" onClick={cancelEditing} disabled={isSaving}>
                       <X className="w-4 h-4 mr-2"/> Cancelar
                    </Button>
                   {editingNoteId && (
-                      <Button variant="destructive" onClick={() => handleDeleteNote(editingNoteId)} disabled={isLoading}>
-                         {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />} Excluir
+                      <Button variant="destructive" onClick={() => handleDeleteNote(editingNoteId)} disabled={isSaving}>
+                         {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />} Excluir
                       </Button>
                    )}
-                   <Button onClick={handleSaveNote} disabled={isLoading || (!currentContent.trim() && !currentTitle.trim())}>
-                       {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Salvar Nota
+                   <Button onClick={handleSaveNote} disabled={isSaving || (!currentContent.trim() && !currentTitle.trim())}>
+                       {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Salvar Nota
                    </Button>
                 </div>
               </CardContent>
@@ -266,12 +300,12 @@ export default function NotesPage() {
        {/* List of Existing Notes - Only show if logged in */}
         {user && !isAdding && !editingNoteId && (
           <div className="space-y-4">
-            {isLoading ? (
+            {isLoading && !authLoading ? ( // Show loading only if auth is complete but notes are fetching
                 <div className="flex justify-center items-center p-8">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     <p className="ml-2 text-muted-foreground">Carregando notas...</p>
                 </div>
-            ) : notes.length === 0 ? (
+            ) : !isLoading && notes.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Nenhuma nota encontrada. Clique em "Nova Nota" para começar.</p>
             ) : (
               notes.map((note) => (
@@ -284,10 +318,10 @@ export default function NotesPage() {
                            </CardDescription>
                        </div>
                        <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => startEditingNote(note)} className="w-8 h-8" disabled={isLoading}>
+                            <Button variant="ghost" size="icon" onClick={() => startEditingNote(note)} className="w-8 h-8" disabled={isSaving}>
                                <Edit className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteNote(note.id)} className="w-8 h-8 text-destructive hover:bg-destructive/10" disabled={isLoading}>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteNote(note.id)} className="w-8 h-8 text-destructive hover:bg-destructive/10" disabled={isSaving}>
                                <Trash2 className="w-4 h-4" />
                             </Button>
                        </div>
@@ -295,7 +329,7 @@ export default function NotesPage() {
                     <CardContent>
                       <p className="text-sm text-foreground line-clamp-3 whitespace-pre-wrap">{note.content}</p>
                        {note.content.split('\n').length > 3 || note.content.length > 150 ? ( // Show 'read more' if content is long or has many lines
-                          <Button variant="link" size="sm" className="p-0 h-auto mt-1" onClick={() => startEditingNote(note)} disabled={isLoading}>
+                          <Button variant="link" size="sm" className="p-0 h-auto mt-1" onClick={() => startEditingNote(note)} disabled={isSaving}>
                              Ler mais...
                           </Button>
                        ) : null}

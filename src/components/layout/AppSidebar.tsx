@@ -24,6 +24,7 @@ import {
   CalendarPlus,
   Brain,
   LogOut, // Added logout icon
+  LogIn, // Added login icon
   Menu, // Added Menu icon for standard trigger
   ChevronLeft, // Added ChevronLeft for close trigger
 } from "lucide-react";
@@ -71,7 +72,7 @@ CustomSidebarTrigger.displayName = "CustomSidebarTrigger";
 export function AppSidebar() {
   const pathname = usePathname();
   const { toast } = useToast();
-  const { user } = useAuth(); // Get user from auth context
+  const { user, login, logout } = useAuth(); // Get user and auth functions
   const { open, openMobile, setOpenMobile } = useSidebar();
 
   const handleScheduleAppointment = () => {
@@ -85,12 +86,24 @@ export function AppSidebar() {
      }
   };
 
-    const handleLogout = () => {
+    const handleLogoutClick = () => {
+     logout(); // Call the logout function from useAuth
      toast({
-       title: "Logout (Simulação)",
+       title: "Logout Realizado",
        description: "Você foi desconectado.",
+       variant: "destructive",
      });
-     // Add actual logout logic here (e.g., call firebase signOut)
+     if (openMobile) {
+       setOpenMobile(false);
+     }
+   };
+
+   const handleLoginClick = () => {
+     login(); // Call the login function from useAuth
+     toast({
+       title: "Login Simulado",
+       description: "Você está agora conectado como usuário simulado.",
+     });
      if (openMobile) {
        setOpenMobile(false);
      }
@@ -104,23 +117,23 @@ export function AppSidebar() {
       collapsible="icon" // **Ensure sidebar is collapsible**
       className="border-r border-sidebar-border"
     >
-      <SidebarHeader className="items-center justify-between p-2"> {/* Ensure padding */}
+      <SidebarHeader className="flex items-center justify-between p-2 h-14"> {/* Fixed height like main header */}
         {/* Logo/Title visible when expanded */}
          <div className={cn("flex items-center gap-2 transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
              <Brain className="w-6 h-6 text-primary shrink-0" /> {/* Added shrink-0 */}
              <h2 className="font-semibold text-lg text-sidebar-foreground whitespace-nowrap">NexusMind</h2>
          </div>
-        {/* Trigger removed from header */}
+        {/* Trigger - Positioned to the right */}
+        <CustomSidebarTrigger className="ml-auto hidden md:flex" />
       </SidebarHeader>
 
        {/* User Info Section - Moved below header */}
-       {/* Use padding-bottom to avoid overlap with fixed BottomNav on mobile when open */}
        {user && (
-        <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200 pb-4 mb-auto", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+        <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200 pb-4", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
             <div className="flex items-center gap-2">
             <Avatar className="w-8 h-8 shrink-0">
                 <AvatarImage src={user.photoURL || "/placeholder-user.png"} alt="User Avatar" data-ai-hint="person silhouette" />
-                <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+                <AvatarFallback>{user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <div className="text-xs overflow-hidden"> {/* Added overflow-hidden */}
                 <p className="font-medium text-sidebar-foreground whitespace-nowrap truncate">{user.displayName || "Usuário"}</p>
@@ -130,6 +143,7 @@ export function AppSidebar() {
         </div>
        )}
 
+      {/* Content: Menus and Buttons */}
       <SidebarContent className="p-2 flex-1 overflow-y-auto">
         <SidebarMenu>
           {menuItems.map((item) => {
@@ -175,31 +189,37 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      {/* Footer with Logout and Sidebar Toggle */}
+      {/* Footer with Login/Logout */}
       <SidebarFooter className="p-2 border-t border-sidebar-border">
-         <div className="flex items-center justify-between">
-            {/* Logout Button */}
-            {user && ( // Show logout only if user is logged in
-                <SidebarMenu className="flex-grow"> {/* Allow menu to take space */}
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        onClick={handleLogout}
-                        tooltip="Sair"
-                        className="justify-start text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive w-full" // Make button take available width in flex item
-                    >
-                        <LogOut className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
-                        <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
-                        Sair
-                        </span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                </SidebarMenu>
+         <SidebarMenu className="flex-grow">
+           {user ? (
+               <SidebarMenuItem>
+                  <SidebarMenuButton
+                      onClick={handleLogoutClick}
+                      tooltip="Sair"
+                      className="justify-start text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive w-full" // Make button take available width in flex item
+                  >
+                      <LogOut className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
+                      <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+                      Sair
+                      </span>
+                  </SidebarMenuButton>
+               </SidebarMenuItem>
+            ) : (
+               <SidebarMenuItem>
+                  <SidebarMenuButton
+                      onClick={handleLoginClick}
+                      tooltip="Entrar (Simulado)"
+                      className="justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full"
+                  >
+                      <LogIn className="w-5 h-5 shrink-0" />
+                      <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+                         Entrar (Simulado)
+                      </span>
+                  </SidebarMenuButton>
+               </SidebarMenuItem>
             )}
-            {!user && <div className="flex-grow"></div>} {/* Spacer if no user */}
-
-             {/* Sidebar Toggle Button - Visible only on desktop */}
-             <CustomSidebarTrigger className="hidden md:flex ml-auto shrink-0" /> {/* Position toggle to the far right */}
-         </div>
+         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
