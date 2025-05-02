@@ -55,6 +55,8 @@ export default function NotesPage() {
     };
 
     const fetchNotes = async () => {
+      if (!user) return; // Extra check for safety
+
       setIsLoading(true);
       try {
         const notesCol = collection(firestore, "notes");
@@ -306,77 +308,3 @@ export default function NotesPage() {
      </div>
   );
 }
-
-// Dummy useAuth hook REMOVED - Use the imported one from '@/hooks/useAuth'
-```></content>
-  </change>
-  <change>
-    <file>src/app/layout.tsx</file>
-    <description>Wrap RootLayout content with AuthProvider to provide authentication context to child components like NotesPage.</description>
-    <content><![CDATA[
-import type {Metadata} from 'next';
-import { Inter } from 'next/font/google'; // Using Inter as a modern sans-serif alternative
-import './globals.css';
-import {Toaster} from '@/components/ui/toaster';
-import BottomNav from '@/components/layout/BottomNav';
-import { cn } from '@/lib/utils';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"; // Import sidebar components
-import { AppSidebar } from "@/components/layout/AppSidebar"; // Import the sidebar implementation
-import Clock from '@/components/layout/Clock'; // Import the Clock component
-import { AuthProvider } from '@/hooks/useAuth'; // Import AuthProvider
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans', // Assign to --font-sans CSS variable
-});
-
-export const metadata: Metadata = {
-  title: 'NexusMind',
-  description: 'Solução focada em vestíveis para saúde mental',
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="pt-BR">
-       <head>
-         <meta name="viewport" content="width=device-width, initial-scale=1" />
-       </head>
-      <body
-        className={cn(
-          inter.variable,
-          'antialiased font-sans flex flex-col min-h-screen bg-background'
-        )}
-      >
-       <AuthProvider> {/* Wrap content with AuthProvider */}
-          <SidebarProvider>
-             <div className="flex"> {/* Flex container for sidebar and main content */}
-                <AppSidebar /> {/* Add the sidebar */}
-                <SidebarInset> {/* Main content area that adjusts for sidebar */}
-                   {/* Header Section within Main Content */}
-                   <header className="sticky top-0 z-10 flex items-center justify-between h-14 px-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:px-6"> {/* Added md:px-6 for desktop padding */}
-                      {/* Mobile Sidebar Trigger */}
-                      <SidebarTrigger className="md:hidden" /> {/* Show only on mobile-like screens */}
-                      {/* Spacer to push Clock to the right on mobile */}
-                      <div className="flex-grow md:hidden"></div>
-                      {/* Clock Component - visible on all screens */}
-                      <Clock />
-                   </header>
-                   {/* Adjust main content padding: more top padding on mobile for the trigger, standard on desktop */}
-                   <main className="flex-grow container mx-auto px-4 py-6 mb-16 sm:mb-16"> {/* Reduced bottom margin slightly */}
-                      {children}
-                   </main>
-                </SidebarInset>
-             </div>
-             <BottomNav />
-             <Toaster />
-          </SidebarProvider>
-       </AuthProvider>
-      </body>
-    </html>
-  );
-}
-```
