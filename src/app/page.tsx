@@ -4,12 +4,13 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { HeartPulse, Activity, Zap, StickyNote, Brain, BarChartHorizontalBig, MessageSquareWarning, PhoneOutgoing, Smartphone, Clock, Lightbulb, Timer } from "lucide-react"; // Removed AlarmClock
+import { HeartPulse, Activity, Zap, Brain, BarChartHorizontalBig, MessageSquareWarning, PhoneOutgoing, Smartphone, Clock, Lightbulb, Timer, LineChart as LineChartIcon } from "lucide-react"; // Added LineChartIcon
 import AdhdTimer from "@/components/features/AdhdTimer";
 import BreathingAnimation from "@/components/features/BreathingAnimation";
 import { useToast } from "@/hooks/use-toast";
-import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line, Tooltip as RechartsTooltip } from 'recharts'; // Keep RechartsTooltip for basic hover info
+import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line } from 'recharts';
 import { ChartTooltipContent, ChartContainer, ChartTooltip } from '@/components/ui/chart';
+import { cn } from "@/lib/utils";
 
 // Simulated data for the chart
 const chartData = [
@@ -37,6 +38,8 @@ const chartConfig = {
   },
 };
 
+const TOTAL_SCREEN_TIME_ALLOWANCE_MINUTES = 4 * 60; // 4 hours
+
 export default function Home() {
   const [showBreathingAnimation, setShowBreathingAnimation] = useState(false);
   const { toast } = useToast();
@@ -45,19 +48,24 @@ export default function Home() {
   const [heartRate, setHeartRate] = useState(72);
   const [hrv, setHrv] = useState(65);
   const [eda, setEda] = useState(0.8);
+  const [screenTimeUsedMinutes, setScreenTimeUsedMinutes] = useState(165); // 2h 45min
 
   // Simulate oscillating data (Client-side only)
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      // Oscillate between 70 and 100 for heart rate
+    const bioIntervalId = setInterval(() => {
       setHeartRate(Math.floor(Math.random() * (100 - 70 + 1)) + 70);
-      // Oscillate between 65 and 90 for HRV
       setHrv(Math.floor(Math.random() * (90 - 65 + 1)) + 65);
-      // Oscillate between 0.8 and 1.0 for EDA
       setEda(+(Math.random() * (1.0 - 0.8) + 0.8).toFixed(1));
     }, 2000); // Update every 2 seconds
 
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    const screenTimeIntervalId = setInterval(() => {
+      setScreenTimeUsedMinutes(prev => Math.min(prev + 1, TOTAL_SCREEN_TIME_ALLOWANCE_MINUTES)); // Simulate increasing screen time
+    }, 60000); // Update every minute
+
+    return () => {
+      clearInterval(bioIntervalId);
+      clearInterval(screenTimeIntervalId);
+    }; // Cleanup on unmount
   }, []);
 
   const handleNotifyContact = () => {
@@ -67,20 +75,56 @@ export default function Home() {
     });
   };
 
+  const screenTimeRemainingMinutes = TOTAL_SCREEN_TIME_ALLOWANCE_MINUTES - screenTimeUsedMinutes;
+  const formatRemainingTime = (minutes: number) => {
+    if (minutes <= 0) return "Limite atingido";
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}min restantes`;
+  };
+
+
   return (
-    <div className="space-y-8">
-      <Card className="shadow-lg rounded-xl overflow-hidden bg-gradient-to-br from-card via-background to-card/80">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-2xl font-bold text-primary flex items-center gap-2">
-             <Brain className="w-6 h-6" />
-             Bem-vindo(a) ao NexusMind!
-          </CardTitle>
-          <CardDescription>Seu painel de bem-estar.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <p className="text-muted-foreground">Aqui está um resumo da sua atividade recente e insights.</p>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+       {/* Removed Welcome Card */}
+
+      {/* Biofeedback Section - Modernized */}
+       <Card className="shadow-md rounded-xl">
+         <CardHeader>
+           <CardTitle className="flex items-center gap-2 text-lg font-semibold text-primary">
+             <Activity className="w-5 h-5" />
+             Visão Geral em Tempo Real
+           </CardTitle>
+           <CardDescription>Dados simulados do seu dispositivo NexusMind.</CardDescription>
+         </CardHeader>
+         <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+           {/* Heart Rate */}
+           <div className="flex items-center justify-center text-center p-4 bg-secondary/50 rounded-lg shadow-sm border border-transparent hover:border-destructive/50 transition-colors duration-300">
+             <div className="flex flex-col items-center">
+                 <HeartPulse className="w-8 h-8 text-destructive mb-2" />
+                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Frequência Cardíaca</p>
+                 <p className="text-2xl font-bold text-foreground">{heartRate} <span className="text-sm font-normal">bpm</span></p>
+             </div>
+           </div>
+           {/* HRV */}
+           <div className="flex items-center justify-center text-center p-4 bg-secondary/50 rounded-lg shadow-sm border border-transparent hover:border-accent/50 transition-colors duration-300">
+               <div className="flex flex-col items-center">
+                  <LineChartIcon className="w-8 h-8 text-accent mb-2" /> {/* Changed icon */}
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">VFC</p>
+                  <p className="text-2xl font-bold text-foreground">{hrv} <span className="text-sm font-normal">ms</span></p>
+               </div>
+           </div>
+            {/* EDA */}
+           <div className="flex items-center justify-center text-center p-4 bg-secondary/50 rounded-lg shadow-sm border border-transparent hover:border-yellow-500/50 transition-colors duration-300">
+              <div className="flex flex-col items-center">
+                 <Zap className="w-8 h-8 text-yellow-500 mb-2" />
+                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">AED</p>
+                 <p className="text-2xl font-bold text-foreground">{eda} <span className="text-sm font-normal">µS</span></p>
+              </div>
+           </div>
+         </CardContent>
+       </Card>
+
 
       {/* Overview Chart */}
       <Card className="shadow-md rounded-xl">
@@ -99,8 +143,8 @@ export default function Home() {
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
                     <ChartTooltip
-                      cursor={true} // Enable cursor for better hover experience
-                      content={<ChartTooltipContent indicator="line" />} // Use custom styled tooltip
+                      cursor={true}
+                      content={<ChartTooltipContent indicator="line" />}
                       />
                     <Line type="monotone" dataKey="fc" stroke="var(--color-fc)" strokeWidth={2} dot={false} />
                     <Line type="monotone" dataKey="vfc" stroke="var(--color-vfc)" strokeWidth={2} dot={false} />
@@ -111,40 +155,6 @@ export default function Home() {
           </CardContent>
       </Card>
 
-
-      {/* Biofeedback Section */}
-      <Card className="shadow-md rounded-xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" />
-            Biofeedback em Tempo Real (Simulado)
-          </CardTitle>
-          <CardDescription>Dados do seu vestível.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center gap-3 p-4 bg-secondary rounded-lg shadow-inner transition-all duration-1000 ease-out">
-            <HeartPulse className="w-6 h-6 text-destructive" />
-            <div>
-              <p className="text-sm text-muted-foreground">Frequência Cardíaca</p>
-              <p className="text-lg font-semibold text-foreground">{heartRate} bpm</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 bg-secondary rounded-lg shadow-inner transition-all duration-1000 ease-out">
-            <Activity className="w-6 h-6 text-accent" />
-            <div>
-              <p className="text-sm text-muted-foreground">VFC</p>
-              <p className="text-lg font-semibold text-foreground">{hrv} ms</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 bg-secondary rounded-lg shadow-inner transition-all duration-1000 ease-out">
-            <Zap className="w-6 h-6 text-yellow-500" />
-            <div>
-              <p className="text-sm text-muted-foreground">AED</p>
-              <p className="text-lg font-semibold text-foreground">{eda} µS</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Alert Section */}
       <Card className="shadow-md rounded-xl bg-destructive/10 border-destructive">
@@ -182,7 +192,7 @@ export default function Home() {
        <Card className="shadow-md rounded-xl">
           <CardHeader>
              <CardTitle className="flex items-center gap-2">
-                <Timer className="w-5 h-5 text-primary" /> Ferramentas de Apoio
+                <Timer className="w-5 h-5 text-primary" /> Ferramentas de Foco
               </CardTitle>
              <CardDescription>Acesso rápido ao timer de foco.</CardDescription>
           </CardHeader>
@@ -219,10 +229,15 @@ export default function Home() {
          <CardContent className="flex items-center gap-4 p-4 bg-secondary rounded-lg shadow-inner">
             <Clock className="w-6 h-6 text-primary" />
             <div>
-                <p className="text-sm text-muted-foreground">Uso hoje</p>
-                <p className="text-lg font-semibold text-foreground">2h 45min</p>
+                <p className="text-sm text-muted-foreground">Uso hoje: {(screenTimeUsedMinutes / 60).toFixed(1)}h / {(TOTAL_SCREEN_TIME_ALLOWANCE_MINUTES / 60)}h</p>
+                <p className={cn(
+                   "text-lg font-semibold",
+                   screenTimeRemainingMinutes <= 30 ? "text-destructive" : "text-foreground"
+                 )}>
+                   {formatRemainingTime(screenTimeRemainingMinutes)}
+                </p>
             </div>
-            <Button variant="link" size="sm" className="ml-auto">Ver Detalhes</Button>
+            {/* Removed "Ver Detalhes" button */}
          </CardContent>
       </Card>
 
@@ -233,3 +248,4 @@ export default function Home() {
     </div>
   );
 }
+

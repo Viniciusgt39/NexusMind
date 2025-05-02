@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import { Inter } from 'next/font/google'; // Using Inter as a modern sans-serif alternative
 import './globals.css';
@@ -37,12 +38,12 @@ export default function RootLayout({
            <div className="flex"> {/* Flex container for sidebar and main content */}
               <AppSidebar /> {/* Add the sidebar */}
               <SidebarInset> {/* Main content area that adjusts for sidebar */}
-                  {/* Sidebar Trigger Button - Placed top-left for now */}
+                  {/* Sidebar Trigger Button - Placed top-left for mobile */}
                  <div className="absolute top-4 left-4 z-20 md:hidden"> {/* Show only on mobile */}
                     <SidebarTrigger />
                  </div>
-                 {/* Reduced the margin bottom for mobile, keeping it for sm and up */}
-                 <main className="flex-grow container mx-auto px-4 py-6 mb-12 sm:mb-16 pt-16 md:pt-6"> {/* Add top padding on mobile */}
+                 {/* Adjust main content padding: more top padding on mobile for the trigger, standard on desktop */}
+                 <main className="flex-grow container mx-auto px-4 py-6 mb-12 sm:mb-16 pt-16 md:pt-6">
                     {children}
                  </main>
               </SidebarInset>
@@ -54,3 +55,4 @@ export default function RootLayout({
     </html>
   );
 }
+

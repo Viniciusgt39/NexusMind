@@ -1,93 +1,189 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Timer as TimerIcon, Play, Pause, RotateCcw, BellRing } from "lucide-react";
+import { Timer as TimerIcon, Play, Pause, RotateCcw, BellRing, AlarmClockOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 // Helper to format time (MM:SS)
 const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(
+  const absSeconds = Math.abs(seconds); // Use absolute value for formatting
+  const minutes = Math.floor(absSeconds / 60);
+  const remainingSeconds = absSeconds % 60;
+  const sign = seconds < 0 ? "-" : ""; // Add negative sign if needed
+  return `${sign}${String(minutes).padStart(2, "0")}:${String(
     remainingSeconds
   ).padStart(2, "0")}`;
 };
-
-// Function to request notification permission and show notification
-const showNotification = (title: string, body: string) => {
-   if (typeof window === 'undefined' || !("Notification" in window)) {
-      // Fallback for environments without Notification API (e.g., server-side, older browsers)
-      console.warn("Notifications not supported in this environment.");
-      alert(`${title}\n${body}`); // Simple alert fallback
-      return;
-   }
-
-   if (Notification.permission === "granted") {
-      new Notification(title, { body });
-   } else if (Notification.permission !== "denied") {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          new Notification(title, { body });
-        } else {
-           alert(`${title}\n${body}`); // Fallback if permission denied after request
-        }
-      });
-   } else {
-      // Permission was explicitly denied
-      alert(`${title}\n${body}`); // Fallback if permission is denied
-   }
-};
-
 
 export default function AdhdTimer() {
   const [initialMinutes, setInitialMinutes] = useState(25);
   const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
+  const [isFinished, setIsFinished] = useState(false); // Track if timer finished
+  const [elapsedTimeAfterFinish, setElapsedTimeAfterFinish] = useState(0); // Track time after finish
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast(); // Use toast for feedback
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { toast, dismiss } = useToast();
+  const currentToastId = useRef<string | null>(null);
 
-
-  // Effect for countdown timer
-  useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => prevTime - 1);
-      }, 1000);
-    } else if (!isRunning || timeLeft === 0) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+  // Function to request notification permission and show notification
+  const showNotification = (title: string, body: string, options?: NotificationOptions) => {
+    if (typeof window === 'undefined' || !("Notification" in window)) {
+      console.warn("Notifications not supported.");
+      // Simple alert fallback for browsers/environments without Notification API
+      if (options?.actions?.length) {
+        const actionTitles = options.actions.map(a => a.title).join(', ');
+        alert(`${title}\n${body}\nActions: ${actionTitles}`);
+      } else {
+        alert(`${title}\n${body}`);
       }
-      if (timeLeft === 0 && isRunning) {
+      return Promise.resolve(null); // Resolve with null if no notification shown
+    }
+
+    return new Promise<Notification | null>((resolve) => {
+      if (Notification.permission === "granted") {
+        const notification = new Notification(title, { body, ...options });
+        // Add event listener for actions if needed here
+        resolve(notification);
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") {
+            const notification = new Notification(title, { body, ...options });
+            resolve(notification);
+          } else {
+            alert(`${title}\n${body}`); // Fallback if permission denied after request
+            resolve(null);
+          }
+        });
+      } else {
+        alert(`${title}\n${body}`); // Fallback if permission is denied
+        resolve(null);
+      }
+    });
+  };
+
+  // Preload audio
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      audioRef.current = new Audio('/sounds/alarm.mp3'); // Ensure you have this audio file
+      audioRef.current.preload = 'auto';
+    }
+  }, []);
+
+
+  // Effect for countdown timer and elapsed time
+  useEffect(() => {
+    if (isRunning) {
+      if (timeLeft > 0) {
+        setIsFinished(false); // Reset finished state if restarting
+        setElapsedTimeAfterFinish(0); // Reset elapsed time
+        intervalRef.current = setInterval(() => {
+          setTimeLeft((prevTime) => prevTime - 1);
+        }, 1000);
+      } else if (!isFinished) {
+        // Timer reached 0 for the first time
         setIsRunning(false);
-        // Trigger notification when time is up
-        showNotification("Tempo Esgotado!", "Sua sessão de foco terminou.");
-         toast({
+        setIsFinished(true);
+        setElapsedTimeAfterFinish(0);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+
+        // Play sound
+        audioRef.current?.play().catch(e => console.error("Error playing sound:", e));
+
+        // Show toast notification with dismiss action
+        const { id: toastId } = toast({
             title: "Tempo Esgotado!",
             description: "Sua sessão de foco terminou.",
-            action: <BellRing className="text-primary" />,
+            duration: Infinity, // Keep toast until manually dismissed
+            action: (
+              <Button variant="outline" size="sm" onClick={() => handleDismissAlarm(toastId)}>
+                <AlarmClockOff className="h-4 w-4 mr-1" />
+                Dispensar
+              </Button>
+            ),
          });
+        currentToastId.current = toastId;
+
+
+        // Show browser notification with dismiss action (if supported)
+        showNotification("Tempo Esgotado!", "Sua sessão de foco terminou.", {
+          tag: 'nexusmind-timer', // Use tag to replace existing notification
+          renotify: true, // Notify even if tag exists
+          // Actions are experimental and might not work everywhere
+          // actions: [{ action: 'dismiss', title: 'Dispensar Alarme' }]
+        }).then(notification => {
+            if (notification) {
+                // Handle notification click/close if needed,
+                // e.g., notification.onclick = () => handleDismissAlarm();
+                // Note: Handling actions directly requires a service worker generally
+            }
+        });
+
+        // Start counting elapsed time
+        intervalRef.current = setInterval(() => {
+          setElapsedTimeAfterFinish((prevTime) => prevTime + 1);
+        }, 1000);
+
       }
+    } else {
+      // If paused or stopped, clear interval
+      if (intervalRef.current) clearInterval(intervalRef.current);
     }
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, timeLeft, toast]); // Added toast to dependency array
+  }, [isRunning, timeLeft, isFinished, toast]);
+
 
   // Effect to update timeLeft when initialMinutes changes (client-side safe)
    useEffect(() => {
-     if (!isRunning) {
+     if (!isRunning && !isFinished) { // Only update if not running AND not finished
        setTimeLeft(initialMinutes * 60);
      }
-   }, [initialMinutes, isRunning]);
+   }, [initialMinutes, isRunning, isFinished]);
+
+  const handleDismissAlarm = (toastId?: string | number) => {
+      audioRef.current?.pause();
+      if (audioRef.current) audioRef.current.currentTime = 0; // Rewind
+      if (toastId && currentToastId.current === String(toastId)) {
+        dismiss(String(toastId));
+        currentToastId.current = null;
+      } else if (currentToastId.current) {
+         dismiss(currentToastId.current); // Dismiss current if no ID passed
+         currentToastId.current = null;
+      }
+
+      // Close browser notification (using tag)
+      if (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator) {
+         navigator.serviceWorker.ready.then(registration => {
+            registration.getNotifications({ tag: 'nexusmind-timer' }).then(notifications => {
+              notifications.forEach(notification => notification.close());
+            });
+          });
+      }
+  };
 
 
   const handleStartPause = () => {
-    if (timeLeft > 0) {
-       // Request notification permission when the timer starts, if not already granted
-       if (!isRunning && typeof window !== 'undefined' && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+    if (isFinished) {
+      // If finished, pressing play/pause again should reset and start
+      handleReset();
+      // Use setTimeout to ensure state updates before starting
+      setTimeout(() => {
+         setIsRunning(true);
+      }, 50);
+      return;
+    }
+
+    if (!isRunning) {
+       // Request notification permission when the timer starts, if not already granted/denied
+       if (typeof window !== 'undefined' && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
           Notification.requestPermission().then(permission => {
              if (permission === 'granted') {
                 toast({ description: "Notificações habilitadas." });
@@ -96,76 +192,93 @@ export default function AdhdTimer() {
              }
           });
        }
-       setIsRunning(!isRunning);
-    } else {
-       // If time is 0, reset before starting
-       handleReset();
-       // Need a slight delay to allow state update before starting
-       setTimeout(() => setIsRunning(true), 50);
     }
+    setIsRunning(!isRunning);
   };
 
   const handleReset = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current); // Clear existing interval on reset
+    handleDismissAlarm(); // Stop alarm if resetting
     setIsRunning(false);
+    setIsFinished(false);
     setTimeLeft(initialMinutes * 60);
+    setElapsedTimeAfterFinish(0);
+    if (intervalRef.current) clearInterval(intervalRef.current);
   };
 
   const handleMinutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
      const newMinutes = parseInt(e.target.value, 10);
-     // Allow setting 0 or more minutes
      if (!isNaN(newMinutes) && newMinutes >= 0) {
         setInitialMinutes(newMinutes);
-        // Reset time left only if not running
-        if (!isRunning) {
+        if (!isRunning && !isFinished) { // Update time only if idle
           setTimeLeft(newMinutes * 60);
         }
      } else if (e.target.value === '') {
-        setInitialMinutes(0); // Set to 0 if input is cleared
-        if (!isRunning) {
+        setInitialMinutes(0);
+        if (!isRunning && !isFinished) {
           setTimeLeft(0);
         }
      }
    };
 
+   const displayTime = isFinished ? -elapsedTimeAfterFinish : timeLeft;
 
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TimerIcon className="w-5 h-5 text-primary" />
-          Timer de Foco / Alarme
+    <Card className="shadow-md rounded-xl overflow-hidden">
+      <CardHeader className="bg-primary/10">
+        <CardTitle className="flex items-center gap-2 text-primary">
+          <TimerIcon className="w-5 h-5" />
+          Timer de Foco
         </CardTitle>
-        <CardDescription>Defina um tempo para foco ou como alarme.</CardDescription>
+        <CardDescription className="text-primary/80">Defina um tempo para se concentrar.</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center space-y-4">
-         <div className="text-6xl font-mono font-semibold text-foreground tabular-nums">
-           {formatTime(timeLeft)}
+      <CardContent className="flex flex-col items-center space-y-6 p-6">
+         {/* Display Time */}
+         <div className={cn(
+             "text-6xl font-mono font-semibold tabular-nums transition-colors duration-300",
+             isFinished ? "text-destructive animate-pulse" : "text-foreground"
+          )}>
+           {formatTime(displayTime)}
          </div>
-          <div className="flex items-center space-x-2">
-            <label htmlFor="timer-minutes" className="text-sm text-muted-foreground">Definir minutos:</label>
-             <Input
-                id="timer-minutes"
-                type="number"
-                min="0" // Allow 0 minutes
-                value={initialMinutes}
-                onChange={handleMinutesChange}
-                className="w-16 h-8 text-center"
-                disabled={isRunning}
-              />
-          </div>
-         <div className="flex space-x-3">
-           <Button onClick={handleStartPause}>
-             {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-             {isRunning ? "Pausar" : (timeLeft > 0 ? "Iniciar" : "Iniciar Novo")}
-           </Button>
-           <Button variant="outline" onClick={handleReset}>
-             <RotateCcw className="w-4 h-4 mr-1" />
-             Resetar
-           </Button>
+
+         {/* Controls */}
+         <div className="w-full max-w-xs space-y-4">
+             <div className="flex items-center justify-center space-x-2">
+                <Label htmlFor="timer-minutes" className="text-sm text-muted-foreground whitespace-nowrap">Definir (min):</Label>
+                 <Input
+                    id="timer-minutes"
+                    type="number"
+                    min="0"
+                    value={initialMinutes}
+                    onChange={handleMinutesChange}
+                    className="w-20 h-9 text-center appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // Hide number spinners
+                    disabled={isRunning || isFinished} // Disable while running or finished
+                    aria-label="Definir minutos do temporizador"
+                  />
+             </div>
+
+             <div className="flex justify-center space-x-3">
+               <Button onClick={handleStartPause} className="w-24" aria-label={isRunning ? "Pausar temporizador" : "Iniciar temporizador"}>
+                 {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+                 {isRunning ? "Pausar" : (isFinished ? "Novo" : "Iniciar")}
+               </Button>
+               <Button variant="outline" onClick={handleReset} className="w-24" aria-label="Resetar temporizador">
+                 <RotateCcw className="w-4 h-4 mr-1" />
+                 Resetar
+               </Button>
+             </div>
          </div>
-          <p className="text-xs text-muted-foreground text-center">Será exibida uma notificação quando o tempo acabar (se permitido).</p>
+
+         {/* Footer Text */}
+         <p className="text-xs text-muted-foreground text-center px-4">
+           {isFinished
+             ? "O tempo acabou! Clique em 'Novo' para reiniciar."
+             : "Uma notificação sonora e visual será exibida ao final (se permitido)."}
+         </p>
       </CardContent>
+       {/* Hidden Audio Element */}
+       <audio ref={audioRef} src="/sounds/alarm.mp3" preload="auto" className="hidden"></audio>
     </Card>
   );
 }
+// Make sure Label is imported if used separately, here it's part of ui/input's structure
+import { Label } from "@/components/ui/label";
