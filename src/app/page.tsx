@@ -6,11 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { HeartPulse, Activity, Zap, Brain, BarChartHorizontalBig, MessageSquareWarning, PhoneOutgoing, Smartphone, Clock, Lightbulb, Timer, LineChart as LineChartIcon } from "lucide-react"; // Added LineChartIcon
 import AdhdTimer from "@/components/features/AdhdTimer";
+import PomodoroTimer from "@/components/features/PomodoroTimer"; // Import PomodoroTimer
 import BreathingAnimation from "@/components/features/BreathingAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line } from 'recharts';
 import { ChartTooltipContent, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs" // Import Tabs components
 
 // Simulated data for the chart
 const chartData = [
@@ -34,7 +36,7 @@ const chartConfig = {
   },
   aed: {
     label: "AED (µS)",
-    color: "hsl(38, 92%, 50%)", // yellow-500 approx
+    color: "hsl(var(--chart-4))", // Updated to use chart variable
   },
 };
 
@@ -85,42 +87,35 @@ export default function Home() {
 
 
   return (
-    <div className="space-y-6">
-       {/* Removed Welcome Card */}
+    <div className="space-y-8"> {/* Increased spacing */}
 
       {/* Biofeedback Section - Modernized */}
-       <Card className="shadow-md rounded-xl">
+       <Card className="shadow-lg rounded-xl overflow-hidden bg-gradient-to-br from-card via-background to-card/80">
          <CardHeader>
-           <CardTitle className="flex items-center gap-2 text-lg font-semibold text-primary">
+           <CardTitle className="flex items-center gap-2 text-xl font-semibold text-primary"> {/* Slightly larger title */}
              <Activity className="w-5 h-5" />
              Visão Geral em Tempo Real
            </CardTitle>
            <CardDescription>Dados simulados do seu dispositivo NexusMind.</CardDescription>
          </CardHeader>
-         <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+         <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4"> {/* Added padding */}
            {/* Heart Rate */}
-           <div className="flex items-center justify-center text-center p-4 bg-secondary/50 rounded-lg shadow-sm border border-transparent hover:border-destructive/50 transition-colors duration-300">
-             <div className="flex flex-col items-center">
-                 <HeartPulse className="w-8 h-8 text-destructive mb-2" />
-                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Frequência Cardíaca</p>
-                 <p className="text-2xl font-bold text-foreground">{heartRate} <span className="text-sm font-normal">bpm</span></p>
-             </div>
+           <div className="flex flex-col items-center justify-center text-center p-4 bg-background rounded-lg shadow-md border border-transparent hover:border-destructive/30 transition-all duration-300 hover:scale-105 cursor-default">
+               <HeartPulse className="w-8 h-8 text-destructive mb-2" />
+               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Frequência Cardíaca</p>
+               <p className="text-3xl font-bold text-foreground">{heartRate} <span className="text-sm font-normal">bpm</span></p>
            </div>
            {/* HRV */}
-           <div className="flex items-center justify-center text-center p-4 bg-secondary/50 rounded-lg shadow-sm border border-transparent hover:border-accent/50 transition-colors duration-300">
-               <div className="flex flex-col items-center">
+           <div className="flex flex-col items-center justify-center text-center p-4 bg-background rounded-lg shadow-md border border-transparent hover:border-accent/30 transition-all duration-300 hover:scale-105 cursor-default">
                   <LineChartIcon className="w-8 h-8 text-accent mb-2" /> {/* Changed icon */}
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">VFC</p>
-                  <p className="text-2xl font-bold text-foreground">{hrv} <span className="text-sm font-normal">ms</span></p>
-               </div>
+                  <p className="text-3xl font-bold text-foreground">{hrv} <span className="text-sm font-normal">ms</span></p>
            </div>
             {/* EDA */}
-           <div className="flex items-center justify-center text-center p-4 bg-secondary/50 rounded-lg shadow-sm border border-transparent hover:border-yellow-500/50 transition-colors duration-300">
-              <div className="flex flex-col items-center">
+           <div className="flex flex-col items-center justify-center text-center p-4 bg-background rounded-lg shadow-md border border-transparent hover:border-yellow-500/30 transition-all duration-300 hover:scale-105 cursor-default">
                  <Zap className="w-8 h-8 text-yellow-500 mb-2" />
                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">AED</p>
-                 <p className="text-2xl font-bold text-foreground">{eda} <span className="text-sm font-normal">µS</span></p>
-              </div>
+                 <p className="text-3xl font-bold text-foreground">{eda} <span className="text-sm font-normal">µS</span></p>
            </div>
          </CardContent>
        </Card>
@@ -146,9 +141,9 @@ export default function Home() {
                       cursor={true}
                       content={<ChartTooltipContent indicator="line" />}
                       />
-                    <Line type="monotone" dataKey="fc" stroke="var(--color-fc)" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="vfc" stroke="var(--color-vfc)" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="aed" stroke="var(--color-aed)" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="fc" stroke="var(--color-fc)" strokeWidth={2} dot={false} name="FC" />
+                    <Line type="monotone" dataKey="vfc" stroke="var(--color-vfc)" strokeWidth={2} dot={false} name="VFC" />
+                    <Line type="monotone" dataKey="aed" stroke="var(--color-aed)" strokeWidth={2} dot={false} name="AED" />
                   </LineChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -165,14 +160,39 @@ export default function Home() {
             <CardDescription className="text-destructive/80">Níveis altos de estresse detectados. Considere fazer uma pausa ou usar uma estratégia de enfrentamento.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col sm:flex-row gap-3">
-            <Button variant="destructive" className="flex-1">
+            <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10">
               Ver Estratégias de Enfrentamento
             </Button>
-            <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={handleNotifyContact}>
+            <Button variant="destructive" className="flex-1" onClick={handleNotifyContact}>
                <PhoneOutgoing className="w-4 h-4 mr-2"/> Notificar Contato de Confiança
             </Button>
           </CardContent>
       </Card>
+
+       {/* Focus Tools Section with Tabs */}
+       <Card className="shadow-lg rounded-xl">
+          <CardHeader>
+             <CardTitle className="flex items-center gap-2 text-xl font-semibold text-primary">
+                <Timer className="w-5 h-5" /> Ferramentas de Foco
+              </CardTitle>
+             <CardDescription>Gerencie seu tempo com o Timer de Foco ou Pomodoro.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0"> {/* Remove padding to allow Tabs to control it */}
+             <Tabs defaultValue="focus-timer" className="w-full">
+               <TabsList className="grid w-full grid-cols-2">
+                 <TabsTrigger value="focus-timer">Timer de Foco</TabsTrigger>
+                 <TabsTrigger value="pomodoro">Pomodoro</TabsTrigger>
+               </TabsList>
+               <TabsContent value="focus-timer">
+                  <AdhdTimer />
+               </TabsContent>
+               <TabsContent value="pomodoro">
+                  <PomodoroTimer />
+               </TabsContent>
+             </Tabs>
+          </CardContent>
+       </Card>
+
 
       {/* Guided Breathing Section */}
       <Card className="shadow-md rounded-xl">
@@ -184,24 +204,8 @@ export default function Home() {
           <Button className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground" onClick={() => setShowBreathingAnimation(true)}>
             Iniciar Exercício de Respiração
           </Button>
-           {/* Breathing Animation Modal is conditionally rendered later */}
         </CardContent>
       </Card>
-
-       {/* ADHD Support Tools Section */}
-       <Card className="shadow-md rounded-xl">
-          <CardHeader>
-             <CardTitle className="flex items-center gap-2">
-                <Timer className="w-5 h-5 text-primary" /> Ferramentas de Foco
-              </CardTitle>
-             <CardDescription>Acesso rápido ao timer de foco.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-             {/* ADHD Timer Component */}
-             <AdhdTimer />
-             {/* Removed placeholder buttons for Alarm and Notes */}
-          </CardContent>
-       </Card>
 
       {/* Insights Section */}
       <Card className="shadow-md rounded-xl bg-accent/10 border-accent">
@@ -226,18 +230,17 @@ export default function Home() {
             </CardTitle>
             <CardDescription>Monitoramento do uso do dispositivo.</CardDescription>
          </CardHeader>
-         <CardContent className="flex items-center gap-4 p-4 bg-secondary rounded-lg shadow-inner">
-            <Clock className="w-6 h-6 text-primary" />
-            <div>
+         <CardContent className="flex items-center gap-4 p-4 bg-secondary/30 rounded-lg shadow-inner"> {/* Adjusted background */}
+            <Clock className="w-8 h-8 text-primary" /> {/* Slightly larger icon */}
+            <div className="flex-grow">
                 <p className="text-sm text-muted-foreground">Uso hoje: {(screenTimeUsedMinutes / 60).toFixed(1)}h / {(TOTAL_SCREEN_TIME_ALLOWANCE_MINUTES / 60)}h</p>
                 <p className={cn(
-                   "text-lg font-semibold",
+                   "text-xl font-semibold", // Increased font size
                    screenTimeRemainingMinutes <= 30 ? "text-destructive" : "text-foreground"
                  )}>
                    {formatRemainingTime(screenTimeRemainingMinutes)}
                 </p>
             </div>
-            {/* Removed "Ver Detalhes" button */}
          </CardContent>
       </Card>
 
@@ -248,4 +251,3 @@ export default function Home() {
     </div>
   );
 }
-

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Timer as TimerIcon, Play, Pause, RotateCcw, BellRing, AlarmClockOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 // Helper to format time (MM:SS)
 const formatTime = (seconds: number): string => {
@@ -22,7 +23,8 @@ const formatTime = (seconds: number): string => {
 
 export default function AdhdTimer() {
   const [initialMinutes, setInitialMinutes] = useState(25);
-  const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
+  const [initialSeconds, setInitialSeconds] = useState(0); // Added state for seconds
+  const [timeLeft, setTimeLeft] = useState(initialMinutes * 60 + initialSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false); // Track if timer finished
   const [elapsedTimeAfterFinish, setElapsedTimeAfterFinish] = useState(0); // Track time after finish
@@ -70,7 +72,8 @@ export default function AdhdTimer() {
   // Preload audio
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('/sounds/alarm.mp3'); // Ensure you have this audio file
+      // Ensure the path is correct relative to the public folder
+      audioRef.current = new Audio('/sounds/timer-finish.mp3'); // Changed sound file name for clarity
       audioRef.current.preload = 'auto';
     }
   }, []);
@@ -112,16 +115,11 @@ export default function AdhdTimer() {
 
         // Show browser notification with dismiss action (if supported)
         showNotification("Tempo Esgotado!", "Sua sessão de foco terminou.", {
-          tag: 'nexusmind-timer', // Use tag to replace existing notification
+          tag: 'nexusmind-focus-timer', // Use specific tag
           renotify: true, // Notify even if tag exists
-          // Actions are experimental and might not work everywhere
-          // actions: [{ action: 'dismiss', title: 'Dispensar Alarme' }]
+          icon: '/icons/timer-icon.png' // Optional: add an icon path
         }).then(notification => {
-            if (notification) {
-                // Handle notification click/close if needed,
-                // e.g., notification.onclick = () => handleDismissAlarm();
-                // Note: Handling actions directly requires a service worker generally
-            }
+            // Handle notification interactions if needed (requires service worker for actions)
         });
 
         // Start counting elapsed time
@@ -138,15 +136,15 @@ export default function AdhdTimer() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, timeLeft, isFinished, toast]);
+  }, [isRunning, timeLeft, isFinished, toast]); // Added toast to dependency array
 
 
-  // Effect to update timeLeft when initialMinutes changes (client-side safe)
+  // Effect to update timeLeft when initialMinutes or initialSeconds changes (client-side safe)
    useEffect(() => {
      if (!isRunning && !isFinished) { // Only update if not running AND not finished
-       setTimeLeft(initialMinutes * 60);
+       setTimeLeft(initialMinutes * 60 + initialSeconds);
      }
-   }, [initialMinutes, isRunning, isFinished]);
+   }, [initialMinutes, initialSeconds, isRunning, isFinished]); // Added initialSeconds
 
   const handleDismissAlarm = (toastId?: string | number) => {
       audioRef.current?.pause();
@@ -162,7 +160,7 @@ export default function AdhdTimer() {
       // Close browser notification (using tag)
       if (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator) {
          navigator.serviceWorker.ready.then(registration => {
-            registration.getNotifications({ tag: 'nexusmind-timer' }).then(notifications => {
+            registration.getNotifications({ tag: 'nexusmind-focus-timer' }).then(notifications => {
               notifications.forEach(notification => notification.close());
             });
           });
@@ -186,7 +184,8 @@ export default function AdhdTimer() {
        if (typeof window !== 'undefined' && "Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
           Notification.requestPermission().then(permission => {
              if (permission === 'granted') {
-                toast({ description: "Notificações habilitadas." });
+                // Optionally show a success toast
+                // toast({ description: "Notificações habilitadas." });
              } else if (permission === 'denied') {
                 toast({ variant: "destructive", description: "Notificações bloqueadas. Você não será notificado quando o tempo acabar." });
              }
@@ -200,7 +199,7 @@ export default function AdhdTimer() {
     handleDismissAlarm(); // Stop alarm if resetting
     setIsRunning(false);
     setIsFinished(false);
-    setTimeLeft(initialMinutes * 60);
+    setTimeLeft(initialMinutes * 60 + initialSeconds); // Use both minutes and seconds
     setElapsedTimeAfterFinish(0);
     if (intervalRef.current) clearInterval(intervalRef.current);
   };
@@ -209,76 +208,94 @@ export default function AdhdTimer() {
      const newMinutes = parseInt(e.target.value, 10);
      if (!isNaN(newMinutes) && newMinutes >= 0) {
         setInitialMinutes(newMinutes);
-        if (!isRunning && !isFinished) { // Update time only if idle
-          setTimeLeft(newMinutes * 60);
-        }
+        // Only update time if idle
+        // if (!isRunning && !isFinished) setTimeLeft(newMinutes * 60 + initialSeconds);
      } else if (e.target.value === '') {
         setInitialMinutes(0);
-        if (!isRunning && !isFinished) {
-          setTimeLeft(0);
-        }
+        // if (!isRunning && !isFinished) setTimeLeft(initialSeconds);
      }
    };
+
+    const handleSecondsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+       const newSeconds = parseInt(e.target.value, 10);
+       if (!isNaN(newSeconds) && newSeconds >= 0 && newSeconds < 60) { // Seconds between 0 and 59
+          setInitialSeconds(newSeconds);
+        //   if (!isRunning && !isFinished) setTimeLeft(initialMinutes * 60 + newSeconds);
+       } else if (e.target.value === '') {
+          setInitialSeconds(0);
+        //   if (!isRunning && !isFinished) setTimeLeft(initialMinutes * 60);
+       }
+     };
+
 
    const displayTime = isFinished ? -elapsedTimeAfterFinish : timeLeft;
 
   return (
-    <Card className="shadow-md rounded-xl overflow-hidden">
-      <CardHeader className="bg-primary/10">
-        <CardTitle className="flex items-center gap-2 text-primary">
-          <TimerIcon className="w-5 h-5" />
-          Timer de Foco
-        </CardTitle>
-        <CardDescription className="text-primary/80">Defina um tempo para se concentrar.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center space-y-6 p-6">
+    <div className="flex flex-col items-center space-y-6 p-6">
          {/* Display Time */}
          <div className={cn(
-             "text-6xl font-mono font-semibold tabular-nums transition-colors duration-300",
+             "text-6xl font-mono font-semibold tabular-nums transition-colors duration-300 mb-4", // Added margin bottom
              isFinished ? "text-destructive animate-pulse" : "text-foreground"
           )}>
            {formatTime(displayTime)}
          </div>
 
-         {/* Controls */}
-         <div className="w-full max-w-xs space-y-4">
-             <div className="flex items-center justify-center space-x-2">
-                <Label htmlFor="timer-minutes" className="text-sm text-muted-foreground whitespace-nowrap">Definir (min):</Label>
+         {/* Input Controls */}
+         <div className="flex items-end justify-center space-x-4 w-full max-w-xs">
+             {/* Minutes Input */}
+             <div className="flex flex-col items-center">
+                <Label htmlFor="timer-minutes" className="text-xs text-muted-foreground mb-1">Minutos</Label>
                  <Input
                     id="timer-minutes"
                     type="number"
                     min="0"
                     value={initialMinutes}
                     onChange={handleMinutesChange}
-                    className="w-20 h-9 text-center appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // Hide number spinners
+                    className="w-20 h-10 text-center appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // Hide number spinners
                     disabled={isRunning || isFinished} // Disable while running or finished
                     aria-label="Definir minutos do temporizador"
                   />
              </div>
-
-             <div className="flex justify-center space-x-3">
-               <Button onClick={handleStartPause} className="w-24" aria-label={isRunning ? "Pausar temporizador" : "Iniciar temporizador"}>
-                 {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-                 {isRunning ? "Pausar" : (isFinished ? "Novo" : "Iniciar")}
-               </Button>
-               <Button variant="outline" onClick={handleReset} className="w-24" aria-label="Resetar temporizador">
-                 <RotateCcw className="w-4 h-4 mr-1" />
-                 Resetar
-               </Button>
+             <span className="text-2xl font-semibold text-muted-foreground pb-1">:</span>
+             {/* Seconds Input */}
+              <div className="flex flex-col items-center">
+                 <Label htmlFor="timer-seconds" className="text-xs text-muted-foreground mb-1">Segundos</Label>
+                 <Input
+                    id="timer-seconds"
+                    type="number"
+                    min="0"
+                    max="59" // Max 59 seconds
+                    step="1"
+                    value={initialSeconds}
+                    onChange={handleSecondsChange}
+                    className="w-20 h-10 text-center appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // Hide number spinners
+                    disabled={isRunning || isFinished}
+                    aria-label="Definir segundos do temporizador"
+                  />
              </div>
          </div>
 
+         {/* Action Buttons */}
+         <div className="flex justify-center space-x-3 pt-4">
+           <Button onClick={handleStartPause} className="w-24" aria-label={isRunning ? "Pausar temporizador" : "Iniciar temporizador"}>
+             {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+             {isRunning ? "Pausar" : (isFinished ? "Novo" : "Iniciar")}
+           </Button>
+           <Button variant="outline" onClick={handleReset} className="w-24" aria-label="Resetar temporizador">
+             <RotateCcw className="w-4 h-4 mr-1" />
+             Resetar
+           </Button>
+         </div>
+
          {/* Footer Text */}
-         <p className="text-xs text-muted-foreground text-center px-4">
+         <p className="text-xs text-muted-foreground text-center px-4 pt-2">
            {isFinished
              ? "O tempo acabou! Clique em 'Novo' para reiniciar."
              : "Uma notificação sonora e visual será exibida ao final (se permitido)."}
          </p>
-      </CardContent>
-       {/* Hidden Audio Element */}
-       <audio ref={audioRef} src="/sounds/alarm.mp3" preload="auto" className="hidden"></audio>
-    </Card>
+         {/* Hidden Audio Element - Ensure the path is correct in /public */}
+         <audio ref={audioRef} src="/sounds/timer-finish.mp3" preload="auto" className="hidden"></audio>
+    </div>
   );
 }
-// Make sure Label is imported if used separately, here it's part of ui/input's structure
-import { Label } from "@/components/ui/label";
+

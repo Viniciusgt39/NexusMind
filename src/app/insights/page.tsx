@@ -1,29 +1,14 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lightbulb, Loader2, AlertTriangle } from "lucide-react";
-// import { generateInsights } from "@/ai/flows/generate-insights"; // Assuming this flow exists or will be created
+import { Lightbulb, Loader2, RefreshCw, AlertTriangle } from "lucide-react"; // Added RefreshCw
+import { generateInsights, GenerateInsightsInput } from "@/ai/flows/generate-insights"; // Import types and function
 
-// Placeholder function until the flow is implemented
-const generateInsights = async (data: any): Promise<{ insights: string[] }> => {
-  console.log("Generating insights with data:", data);
-  await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call delay
-  // Return placeholder insights
-  return {
-    insights: [
-      "Observamos uma correlação entre seus check-ins 'Calmo' e dias com maior atividade física registrada pelo bracelete.",
-      "Sua temperatura corporal basal parece ligeiramente mais alta nos dias seguintes a noites com sono 'Profundo' abaixo da média.",
-      "Os níveis de estresse (AED) tendem a diminuir após o uso do Timer de Foco. Continue usando essa ferramenta!",
-      "Você mencionou 'sobrecarregado' em suas notas em dias com menos de 6 horas de sono registradas.",
-    ],
-  };
-};
-
-
-// Simulated data for insights generation (replace with actual data fetching logic)
-const simulatedUserData = {
+// Simulated data for insights generation (replace with actual data fetching logic from context or storage)
+const simulatedUserData: GenerateInsightsInput = {
   checkIns: [
     { date: "2024-07-20", mood: "Ansioso", notes: "Sentindo-me sobrecarregado com prazos.", symptoms: ["Dificuldade de Concentração"] },
     { date: "2024-07-21", mood: "Neutro", notes: "Sentindo-me um pouco melhor após o exercício.", symptoms: [] },
@@ -53,12 +38,16 @@ export default function InsightsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      // Pass relevant user data to the AI flow
-      const response = await generateInsights(simulatedUserData);
+      // TODO: Replace simulatedUserData with actual data fetching logic
+      // This might involve reading from localStorage, context, or a backend API
+      const userData = simulatedUserData;
+
+      // Call the actual Genkit flow
+      const response = await generateInsights(userData);
       setInsights(response.insights);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao gerar insights:", err);
-      setError("Não foi possível gerar os insights. Tente novamente mais tarde.");
+      setError(err.message || "Não foi possível gerar os insights. Tente novamente mais tarde.");
       setInsights([]); // Clear previous insights on error
     } finally {
       setIsLoading(false);
@@ -85,42 +74,53 @@ export default function InsightsPage() {
        </Card>
 
       <Card className="shadow-md rounded-xl min-h-[300px] flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between border-b pb-4"> {/* Added border */}
            <div>
              <CardTitle>Suas Observações</CardTitle>
-             <CardDescription>Deslize para ver mais insights.</CardDescription>
+             <CardDescription>Insights baseados na sua atividade recente.</CardDescription>
            </div>
            <Button onClick={fetchInsights} disabled={isLoading} size="sm" variant="outline">
             {isLoading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <Lightbulb className="w-4 h-4 mr-2" />
+              <RefreshCw className="w-4 h-4 mr-2" /> // Changed icon to RefreshCw
             )}
             {isLoading ? "Gerando..." : "Atualizar Insights"}
           </Button>
         </CardHeader>
-        <CardContent className="flex-grow flex items-center justify-center">
+        <CardContent className="flex-grow flex items-center justify-center p-6"> {/* Added padding */}
           {isLoading ? (
-            <div className="flex flex-col items-center text-muted-foreground">
-              <Loader2 className="w-8 h-8 animate-spin mb-2" />
+            <div className="flex flex-col items-center text-muted-foreground text-center space-y-2">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p>Analisando seus dados...</p>
+              <p className="text-xs">Isso pode levar alguns segundos.</p>
             </div>
           ) : error ? (
-             <div className="text-center text-destructive flex flex-col items-center">
-                 <AlertTriangle className="w-8 h-8 mb-2" />
-                 <p>{error}</p>
+             <div className="text-center text-destructive flex flex-col items-center space-y-2">
+                 <AlertTriangle className="w-10 h-10" />
+                 <p className="font-semibold">Erro ao Gerar Insights</p>
+                 <p className="text-sm">{error}</p>
+                 <Button onClick={fetchInsights} variant="destructive" size="sm" className="mt-2">
+                    Tentar Novamente
+                 </Button>
              </div>
           ) : insights.length > 0 ? (
-            <ul className="space-y-3 list-disc pl-5 text-foreground">
+            <ul className="space-y-4 list-disc pl-5 text-foreground w-full">
               {insights.map((insight, index) => (
-                <li key={index} className="text-sm leading-relaxed">{insight}</li>
+                <li key={index} className="text-base leading-relaxed bg-secondary/30 p-3 rounded-md shadow-sm"> {/* Improved styling */}
+                    <span className="font-medium">💡</span> {insight}
+                </li>
               ))}
             </ul>
           ) : (
-            <p className="text-muted-foreground">Ainda não há insights disponíveis. Continue usando o app!</p>
+            <div className="text-center text-muted-foreground space-y-2">
+               <Lightbulb className="w-10 h-10 mx-auto" />
+               <p>Ainda não há insights disponíveis.</p>
+               <p className="text-sm">Continue registrando seus dados e check-ins para receber observações personalizadas.</p>
+            </div>
           )}
         </CardContent>
-         <p className="text-xs text-muted-foreground p-4 text-center border-t mt-auto">
+         <p className="text-xs text-muted-foreground p-3 text-center border-t mt-auto bg-background/50 rounded-b-xl"> {/* Added background */}
            Estes insights são gerados por IA e não substituem aconselhamento médico profissional.
          </p>
       </Card>

@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react'; // Added missing React import
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -25,6 +26,7 @@ import {
   PanelLeft, // Keep PanelLeft for trigger
   Brain,
   LogOut, // Added logout icon
+  Menu, // Added Menu icon for standard trigger
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -33,10 +35,37 @@ import { Separator } from "@/components/ui/separator"; // Added Separator
 // Reordered menu items for priority
 const menuItems = [
   { href: "/bracelet", label: "Dispositivo", icon: Watch },
-  { href: "/profile", label: "Perfil", icon: User },
   { href: "/timeline", label: "Linha do Tempo", icon: BarChart3 },
+  { href: "/profile", label: "Perfil", icon: User },
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
+
+// Custom SidebarTrigger using Menu icon
+const CustomSidebarTrigger = React.forwardRef<
+  React.ElementRef<typeof Button>,
+  React.ComponentProps<typeof Button>
+>(({ className, onClick, ...props }, ref) => {
+  const { toggleSidebar } = useSidebar();
+
+  return (
+    <Button
+      ref={ref}
+      data-sidebar="trigger"
+      variant="ghost"
+      size="icon"
+      className={cn("h-8 w-8", className)} // Standard icon button size
+      onClick={(event) => {
+        onClick?.(event);
+        toggleSidebar();
+      }}
+      {...props}
+    >
+      <Menu className="w-5 h-5" /> {/* Use Menu icon */}
+      <span className="sr-only">Alternar Menu Lateral</span>
+    </Button>
+  );
+});
+CustomSidebarTrigger.displayName = "CustomSidebarTrigger";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -73,16 +102,30 @@ export function AppSidebar() {
       collapsible="icon" // Allow collapsing to icons
       className="border-r border-sidebar-border"
     >
-      <SidebarHeader className="items-center justify-between">
+      <SidebarHeader className="items-center justify-between p-2"> {/* Ensure padding */}
         {/* Logo/Title visible when expanded */}
-         <div className={cn("flex items-center gap-2", open ? "opacity-100" : "opacity-0 group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200")}>
-             <Brain className="w-6 h-6 text-primary" />
+         <div className={cn("flex items-center gap-2 transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+             <Brain className="w-6 h-6 text-primary shrink-0" /> {/* Added shrink-0 */}
              <h2 className="font-semibold text-lg text-sidebar-foreground whitespace-nowrap">NexusMind</h2>
          </div>
-        {/* Trigger always visible on desktop for expand/collapse, mobile handled by layout */}
-         <SidebarTrigger className="hidden md:flex" /> {/* Use SidebarTrigger for collapse/expand */}
-         {/* Mobile trigger is now in RootLayout */}
+        {/* Trigger always visible on desktop for expand/collapse */}
+         <CustomSidebarTrigger className="hidden md:flex" /> {/* Use CustomSidebarTrigger */}
+         {/* Mobile trigger is now in RootLayout header */}
       </SidebarHeader>
+
+       {/* User Info Section - Moved below header */}
+       <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+         <div className="flex items-center gap-2">
+           <Avatar className="w-8 h-8 shrink-0">
+             <AvatarImage src="/placeholder-user.png" alt="User Avatar" data-ai-hint="person silhouette" />
+             <AvatarFallback>A</AvatarFallback>
+           </Avatar>
+           <div className="text-xs overflow-hidden"> {/* Added overflow-hidden */}
+             <p className="font-medium text-sidebar-foreground whitespace-nowrap truncate">Alex Johnson</p>
+             <p className="text-muted-foreground whitespace-nowrap truncate">alex.j@email.com</p>
+           </div>
+         </div>
+       </div>
 
       <SidebarContent className="p-2 flex-1 overflow-y-auto">
         <SidebarMenu>
@@ -97,8 +140,8 @@ export function AppSidebar() {
                       className="justify-start"
                       onClick={() => openMobile && setOpenMobile(false)} // Close mobile sidebar on click
                     >
-                     <item.icon className="w-5 h-5" />
-                     <span className={cn("whitespace-nowrap", open ? "opacity-100" : "opacity-0 group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200")}>
+                     <item.icon className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
+                     <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
                        {item.label}
                      </span>
                    </SidebarMenuButton>
@@ -120,8 +163,8 @@ export function AppSidebar() {
                    "group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:text-sidebar-primary group-data-[collapsible=icon]:hover:bg-sidebar-accent" // Style when collapsed
                  )}
                >
-                <CalendarPlus className="w-5 h-5" />
-                <span className={cn("whitespace-nowrap", open ? "opacity-100" : "opacity-0 group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200")}>
+                <CalendarPlus className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
+                <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
                   Agendar Consulta
                 </span>
               </SidebarMenuButton>
@@ -129,19 +172,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-2 border-t border-sidebar-border">
-         {/* User Info */}
-         <div className={cn("flex items-center gap-2 mb-2", open ? "opacity-100" : "opacity-0 group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200")}>
-           <Avatar className="w-8 h-8">
-             <AvatarImage src="/placeholder-user.png" alt="User Avatar" data-ai-hint="person silhouette" />
-             <AvatarFallback>A</AvatarFallback> {/* Changed Fallback */}
-           </Avatar>
-           <div className="text-xs">
-             <p className="font-medium text-sidebar-foreground whitespace-nowrap">Alex Johnson</p>
-             <p className="text-muted-foreground whitespace-nowrap">alex.j@email.com</p>
-           </div>
-         </div>
-
+      <SidebarFooter className="p-2 border-t border-sidebar-border mt-auto"> {/* Added mt-auto */}
          {/* Logout Button */}
          <SidebarMenu>
             <SidebarMenuItem>
@@ -150,8 +181,8 @@ export function AppSidebar() {
                    tooltip="Sair"
                    className="justify-start text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive"
                 >
-                 <LogOut className="w-5 h-5" />
-                 <span className={cn("whitespace-nowrap", open ? "opacity-100" : "opacity-0 group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200")}>
+                 <LogOut className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
+                 <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
                    Sair
                  </span>
                </SidebarMenuButton>

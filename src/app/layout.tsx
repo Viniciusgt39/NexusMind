@@ -7,6 +7,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import { cn } from '@/lib/utils';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"; // Import sidebar components
 import { AppSidebar } from "@/components/layout/AppSidebar"; // Import the sidebar implementation
+import Clock from '@/components/layout/Clock'; // Import the Clock component
 
 const inter = Inter({
   subsets: ['latin'],
@@ -38,12 +39,15 @@ export default function RootLayout({
            <div className="flex"> {/* Flex container for sidebar and main content */}
               <AppSidebar /> {/* Add the sidebar */}
               <SidebarInset> {/* Main content area that adjusts for sidebar */}
-                  {/* Sidebar Trigger Button - Placed top-left for mobile */}
-                 <div className="absolute top-4 left-4 z-20 md:hidden"> {/* Show only on mobile */}
-                    <SidebarTrigger />
-                 </div>
+                 {/* Header Section within Main Content */}
+                 <header className="sticky top-0 z-10 flex items-center justify-between h-14 px-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:px-6 md:hidden">
+                    {/* Mobile Sidebar Trigger */}
+                    <SidebarTrigger className="md:hidden" /> {/* Show only on mobile-like screens */}
+                    {/* Clock Component */}
+                    <Clock />
+                 </header>
                  {/* Adjust main content padding: more top padding on mobile for the trigger, standard on desktop */}
-                 <main className="flex-grow container mx-auto px-4 py-6 mb-12 sm:mb-16 pt-16 md:pt-6">
+                 <main className="flex-grow container mx-auto px-4 py-6 mb-16 sm:mb-16"> {/* Reduced bottom margin slightly */}
                     {children}
                  </main>
               </SidebarInset>
@@ -55,4 +59,3 @@ export default function RootLayout({
     </html>
   );
 }
-
