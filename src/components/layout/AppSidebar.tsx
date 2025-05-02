@@ -12,7 +12,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator"; // Added Separator
+import { SidebarTrigger } from "@/components/ui/sidebar"; // Import default trigger if needed, or keep using custom
 
 // Reordered menu items for priority
 const menuItems = [
@@ -108,9 +108,7 @@ export function AppSidebar() {
              <Brain className="w-6 h-6 text-primary shrink-0" /> {/* Added shrink-0 */}
              <h2 className="font-semibold text-lg text-sidebar-foreground whitespace-nowrap">NexusMind</h2>
          </div>
-        {/* Trigger always visible on desktop for expand/collapse */}
-         <CustomSidebarTrigger className="hidden md:flex" /> {/* Use CustomSidebarTrigger */}
-         {/* Mobile trigger is now in RootLayout header */}
+        {/* Trigger removed from header */}
       </SidebarHeader>
 
        {/* User Info Section - Moved below header */}
@@ -173,22 +171,27 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-2 border-t border-sidebar-border"> {/* Removed mt-auto to allow user info to push it down */}
-         {/* Logout Button */}
-         <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                   onClick={handleLogout}
-                   tooltip="Sair"
-                   className="justify-start text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive"
-                >
-                 <LogOut className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
-                 <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
-                   Sair
-                 </span>
-               </SidebarMenuButton>
-            </SidebarMenuItem>
-         </SidebarMenu>
+      {/* Footer with Logout and Sidebar Toggle */}
+      <SidebarFooter className="p-2 border-t border-sidebar-border">
+         <div className="flex items-center justify-between">
+            {/* Logout Button */}
+            <SidebarMenu className="flex-grow"> {/* Allow menu to take space */}
+               <SidebarMenuItem>
+                   <SidebarMenuButton
+                      onClick={handleLogout}
+                      tooltip="Sair"
+                      className="justify-start text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive w-full" // Make button take available width in flex item
+                   >
+                    <LogOut className="w-5 h-5 shrink-0" /> {/* Added shrink-0 */}
+                    <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+                      Sair
+                    </span>
+                  </SidebarMenuButton>
+               </SidebarMenuItem>
+            </SidebarMenu>
+             {/* Sidebar Toggle Button - Visible only on desktop */}
+             <CustomSidebarTrigger className="hidden md:flex ml-2 shrink-0" /> {/* Added ml-2 for spacing, shrink-0 */}
+         </div>
       </SidebarFooter>
     </Sidebar>
   );
