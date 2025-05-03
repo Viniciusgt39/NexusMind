@@ -91,7 +91,7 @@ export async function generateInsights(input: GenerateInsightsInput): Promise<Ge
 const insightsPrompt = ai.definePrompt({
     name: 'generateInsightsPrompt',
     // Use a model capable of analyzing data and generating text
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-2.0-flash',
     input: { schema: GenerateInsightsInputSchema },
     output: { schema: GenerateInsightsOutputSchema },
     system: `Você é um assistente de bem-estar da NexusMind. Sua tarefa é analisar os dados fornecidos pelo usuário (check-ins emocionais, dados do bracelete como sono, atividade, estresse, temperatura, lista de medicações, uso de timer de foco) e gerar de 3 a 5 insights acionáveis, personalizados e encorajadores em Português do Brasil.
