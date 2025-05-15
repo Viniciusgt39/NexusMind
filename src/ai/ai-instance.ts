@@ -4,11 +4,7 @@ import {googleAI} from '@genkit-ai/googleai';
 // Ensure the API key is loaded from environment variables
 if (!process.env.GOOGLE_GENAI_API_KEY) {
   console.warn("GOOGLE_GENAI_API_KEY environment variable not set. GenAI features may not work.");
-} else {
-  // Optional: Log a masked version or just confirmation that it's found
-  console.log("GOOGLE_GENAI_API_KEY found.");
 }
-
 
 export const ai = genkit({
   promptDir: './prompts',
