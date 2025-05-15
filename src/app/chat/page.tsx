@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
@@ -91,7 +92,7 @@ export default function ChatPage() {
                  >
                    {message.sender === "ai" && (
                      <Avatar className="w-10 h-10 border-2 border-accent shadow-md">
-                       <AvatarImage src="/placeholder-ai.png" alt="AI Avatar" data-ai-hint="friendly robot face" />
+                       <AvatarImage src="https://placehold.co/100x100.png" alt="AI Avatar" data-ai-hint="Gemini logo" />
                        <AvatarFallback className="bg-accent text-accent-foreground">IA</AvatarFallback>
                      </Avatar>
                    )}
@@ -118,7 +119,7 @@ export default function ChatPage() {
                 {isLoading && (
                   <div className="flex justify-start items-center gap-3">
                     <Avatar className="w-10 h-10 border-2 border-accent shadow-md">
-                      <AvatarImage src="/placeholder-ai.png" alt="AI Avatar" data-ai-hint="friendly robot face" />
+                      <AvatarImage src="https://placehold.co/100x100.png" alt="AI Avatar" data-ai-hint="Gemini logo" />
                       <AvatarFallback className="bg-accent text-accent-foreground">IA</AvatarFallback>
                     </Avatar>
                     <div className="bg-gradient-to-r from-accent/50 to-green-400/50 rounded-xl p-3 shadow-md">
@@ -152,3 +153,4 @@ export default function ChatPage() {
     </div>
   );
 }
+
