@@ -47,56 +47,66 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isUsingFirebaseAuth, setIsUsingFirebaseAuth] = useState(false); // Track if Firebase auth is active
 
   useEffect(() => {
-    // Listen for Firebase authentication state changes ONLY if auth is available
     let unsubscribe: (() => void) | undefined;
-    if (auth) {
-       unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-         setUser(currentUser);
+    if (auth) { // Firebase SDK's auth object exists
+      console.log("AuthProvider: Attempting to use Firebase Auth initialization.");
+      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        console.log("AuthProvider: Firebase onAuthStateChanged currentUser:", currentUser);
+        // Only set Firebase user if not overridden by a simulated login action
+        // This prevents Firebase null user from clearing a dummyUser set by explicit login button
+        if (!user || user.uid !== dummyUser.uid) {
+            setUser(currentUser);
+        }
+        setLoading(false);
+        setIsUsingFirebaseAuth(true);
+      }, (error) => {
+         console.error("AuthProvider: Firebase onAuthStateChanged error:", error);
+         setUser(null); // Ensure user is null on auth error
          setLoading(false);
-         setIsUsingFirebaseAuth(true); // Indicate Firebase auth is being used
-       });
-     } else {
-       // If Firebase auth is not configured, fall back to simulation after a brief delay
-       console.warn("Firebase Auth not initialized, using simulated login.");
-       setTimeout(() => setLoading(false), 500); // Simulate loading delay
-       setIsUsingFirebaseAuth(false);
-     }
+         setIsUsingFirebaseAuth(false); // Fallback to fully simulated mode if onAuthStateChanged itself errors
+      });
+    } else { // Firebase SDK's auth object does NOT exist (e.g. firebase.ts failed to init auth)
+      console.warn("AuthProvider: Firebase Auth object not available, using fully simulated mode.");
+      setTimeout(() => {
+        setLoading(false);
+        setIsUsingFirebaseAuth(false);
+      }, 500);
+    }
 
-
-    // Cleanup subscription on unmount
     return () => {
-       if (unsubscribe) unsubscribe();
+       if (unsubscribe) {
+        console.log("AuthProvider: Unsubscribing from onAuthStateChanged.");
+        unsubscribe();
+       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth]); // Depend on auth object from firebase.ts
+
+   // Simulated login function for the "Entrar (Simulado)" button
+   const login = useCallback(() => {
+    console.log("Login function called: Simulating login with dummy user.");
+    setUser(dummyUser);
+    setLoading(false); // Ensure loading is false so UI updates immediately
   }, []);
 
-   // Simulated login function
-   const login = useCallback(() => {
-    if (!isUsingFirebaseAuth) {
-      console.log("Simulating login...");
-      setUser(dummyUser);
-      setLoading(false); // Ensure loading is false
-    } else {
-      console.log("Firebase Auth is active. Please use Firebase login methods.");
-      // Optionally, redirect to a Firebase login page or trigger Firebase login flow
-    }
-  }, [isUsingFirebaseAuth]);
-
-  // Simulated logout function
+  // Logout function
    const logout = useCallback(() => {
-    if (!isUsingFirebaseAuth) {
-      console.log("Simulating logout...");
-      setUser(null);
-    } else if (auth) {
-       console.log("Logging out with Firebase...");
+    // If real Firebase auth was active and resulted in a Firebase user, sign out from Firebase.
+    // Otherwise, just clear the simulated user.
+    if (isUsingFirebaseAuth && auth && auth.currentUser) {
+       console.log("Logout function called: Logging out from Firebase...");
        auth.signOut().then(() => {
-         setUser(null); // Update state after successful Firebase sign-out
+         setUser(null);
+         console.log("AuthProvider: Firebase user signed out.");
        }).catch((error) => {
-         console.error("Firebase logout error:", error);
+         console.error("AuthProvider: Firebase logout error:", error);
+         setUser(null); // Fallback to clearing local state
        });
      } else {
-        console.error("Cannot logout: Firebase Auth not initialized.");
+       console.log("Logout function called: Simulating logout (clearing local user state).");
+       setUser(null);
      }
-   }, [isUsingFirebaseAuth]);
+   }, [isUsingFirebaseAuth, auth]);
 
 
   // Display a loading indicator while checking auth state
@@ -123,3 +133,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
