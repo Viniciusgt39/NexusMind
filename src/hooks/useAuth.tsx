@@ -36,9 +36,9 @@ interface AuthProviderProps {
 // Simulated user data
 const dummyUser: SimulatedUser = {
   uid: "simulated-user-123",
-  email: "usuario@exemplo.com",
-  displayName: "Usuário Simulado",
-  photoURL: "/placeholder-user.png",
+  email: "alex.silva@example.com", // Updated email
+  displayName: "Alex Silva", // Updated displayName
+  photoURL: "/placeholder-user.png", // Keep placeholder, hint exists elsewhere
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
