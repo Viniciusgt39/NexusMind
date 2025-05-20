@@ -36,9 +36,9 @@ interface AuthProviderProps {
 // Simulated user data
 const dummyUser: SimulatedUser = {
   uid: "simulated-user-123",
-  email: "alex.silva@example.com", // Updated email
-  displayName: "Alex Silva", // Updated displayName
-  photoURL: "/placeholder-user.png", // Keep placeholder, hint exists elsewhere
+  email: "alex.silva@example.com",
+  displayName: "Alex Silva",
+  photoURL: "https://placehold.co/100x100.png", // Placeholder image URL
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log("AuthProvider: Firebase onAuthStateChanged currentUser:", currentUser);
         // Only set Firebase user if not overridden by a simulated login action
         // This prevents Firebase null user from clearing a dummyUser set by explicit login button
-        if (!user || user.uid !== dummyUser.uid) {
+        if (!user || user.uid !== dummyUser.uid) { // Check against dummyUser.uid
             setUser(currentUser);
         }
         setLoading(false);
@@ -68,9 +68,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } else { // Firebase SDK's auth object does NOT exist (e.g. firebase.ts failed to init auth)
       console.warn("AuthProvider: Firebase Auth object not available, using fully simulated mode.");
       setTimeout(() => {
+        // If no Firebase auth, we might still want to allow simulated login or show logged-out state
         setLoading(false);
         setIsUsingFirebaseAuth(false);
-      }, 500);
+      }, 500); // Simulate a short delay
     }
 
     return () => {
