@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator"; // Added Separator
 import { useAuth } from '@/hooks/useAuth'; // Import useAuth
+import { SheetTitle } from "@/components/ui/sheet"; // Import SheetTitle for mobile accessibility
 
 
 // Reordered menu items for priority
@@ -121,7 +122,15 @@ export function AppSidebar() {
         {/* Logo/Title visible when expanded */}
          <div className={cn("flex items-center gap-2 transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
              <Brain className="w-6 h-6 text-primary shrink-0" /> {/* Added shrink-0 */}
-             <h2 className="font-semibold text-lg text-sidebar-foreground whitespace-nowrap">NexusMind</h2>
+             {/* Use SheetTitle for accessibility in mobile (Sheet) view */}
+             <SheetTitle className={cn(
+                "font-semibold text-lg text-sidebar-foreground whitespace-nowrap",
+                // This className handles visibility for desktop sidebar,
+                // for mobile Sheet, it's always visible when open.
+                open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0"
+              )}>
+                NexusMind
+              </SheetTitle>
          </div>
         {/* Trigger - Positioned to the right */}
         <CustomSidebarTrigger className="ml-auto hidden md:flex" />
@@ -132,7 +141,7 @@ export function AppSidebar() {
         <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200 pb-4", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
             <div className="flex items-center gap-2">
             <Avatar className="w-8 h-8 shrink-0">
-                <AvatarImage src={user.photoURL || "/placeholder-user.png"} alt="User Avatar" data-ai-hint="person silhouette" />
+                <AvatarImage src={user.photoURL || "/placeholder-user.png"} alt="Avatar do Usuário" data-ai-hint="person silhouette"/>
                 <AvatarFallback>{user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <div className="text-xs overflow-hidden"> {/* Added overflow-hidden */}
