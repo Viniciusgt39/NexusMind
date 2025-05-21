@@ -4,13 +4,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { HeartPulse, Activity, Zap, Brain, Users, MessageSquareWarning, PhoneOutgoing, Smartphone, Clock, Lightbulb, Timer, LineChart as LineChartIcon } from "lucide-react";
+import { HeartPulse, Activity, Zap, Brain, Users, MessageSquareWarning, PhoneOutgoing, Smartphone, Clock, Lightbulb, Timer, LineChart as LineChartIcon, Watch } from "lucide-react";
 import AdhdTimer from "@/components/features/AdhdTimer";
 import PomodoroTimer from "@/components/features/PomodoroTimer";
+import StopwatchTimer from "@/components/features/StopwatchTimer"; // Import StopwatchTimer
 import BreathingAnimation from "@/components/features/BreathingAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line } from 'recharts';
-import { ChartTooltipContent, ChartContainer } from '@/components/ui/chart'; // ChartTooltip removed as it's part of ChartContainer implicitly
+import { ChartTooltipContent, ChartContainer } from '@/components/ui/chart';
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -28,15 +29,15 @@ const chartData = [
 const chartConfig = {
   fc: {
     label: "FC (bpm)",
-    color: "hsl(var(--chart-1))", // Use themed chart color
+    color: "hsl(var(--chart-1))",
   },
   vfc: {
     label: "VFC (ms)",
-    color: "hsl(var(--chart-2))", // Use themed chart color
+    color: "hsl(var(--chart-2))",
   },
   aed: {
     label: "AED (µS)",
-    color: "hsl(var(--chart-3))", // Use themed chart color
+    color: "hsl(var(--chart-3))",
   },
 };
 
@@ -85,17 +86,14 @@ export default function Home() {
 
 
   return (
-    <div className="space-y-6"> {/* Reduced top-level spacing slightly */}
-      {/* Page Title - "Dashboard" as per image */}
+    <div className="space-y-6">
       <h1 className="text-3xl font-semibold text-foreground">Dashboard</h1>
 
-
-       {/* Biofeedback Section - Styled like NexusView cards */}
        <Card className="shadow-sm">
          <CardHeader className="pb-3">
            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
-             <Activity className="w-5 h-5 text-primary" />
-             Visão Geral em Tempo Real
+             <Watch className="w-5 h-5 text-primary" /> {/* Changed icon */}
+             Dados da Pulseira (Tempo Real)
            </CardTitle>
            <CardDescription className="text-xs">Dados simulados do seu dispositivo NexusMind.</CardDescription>
          </CardHeader>
@@ -118,8 +116,6 @@ export default function Home() {
          </CardContent>
        </Card>
 
-
-      {/* Overview Chart */}
       <Card className="shadow-sm">
           <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
@@ -169,8 +165,6 @@ export default function Home() {
           </CardContent>
       </Card>
 
-
-      {/* Alert Section */}
       <Card className="shadow-sm bg-destructive/5 border-destructive/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-destructive flex items-center gap-2 text-base">
@@ -188,7 +182,6 @@ export default function Home() {
           </CardContent>
       </Card>
 
-      {/* Guided Breathing Section */}
       <Card className="shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground">Respiração Guiada</CardTitle>
@@ -201,19 +194,19 @@ export default function Home() {
         </CardContent>
       </Card>
 
-       {/* Focus Tools Section with Tabs */}
        <Card className="shadow-sm">
           <CardHeader className="pb-3">
              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <Timer className="w-5 h-5 text-primary" /> Ferramentas de Foco
               </CardTitle>
-             <CardDescription className="text-xs">Gerencie seu tempo com o Timer de Foco ou Pomodoro.</CardDescription>
+             <CardDescription className="text-xs">Gerencie seu tempo e concentração.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
              <Tabs defaultValue="focus-timer" className="w-full">
-               <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-muted/50">
+               <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-muted/50"> {/* Updated to grid-cols-3 */}
                  <TabsTrigger value="focus-timer" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary">Timer de Foco</TabsTrigger>
                  <TabsTrigger value="pomodoro" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary">Pomodoro</TabsTrigger>
+                 <TabsTrigger value="stopwatch" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary">Cronômetro</TabsTrigger> {/* New Trigger */}
                </TabsList>
                <TabsContent value="focus-timer" className="p-4">
                   <AdhdTimer />
@@ -221,11 +214,13 @@ export default function Home() {
                <TabsContent value="pomodoro" className="p-4">
                   <PomodoroTimer />
                </TabsContent>
+               <TabsContent value="stopwatch" className="p-4"> {/* New Content */}
+                  <StopwatchTimer />
+               </TabsContent>
              </Tabs>
           </CardContent>
        </Card>
 
-      {/* Insights Section */}
       <Card className="shadow-sm bg-accent/10 border-accent/30">
           <CardHeader className="pb-3">
              <CardTitle className="flex items-center gap-2 text-base text-accent-foreground">
@@ -240,7 +235,6 @@ export default function Home() {
           </CardContent>
       </Card>
 
-      {/* Screen Time Section */}
       <Card className="shadow-sm">
          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
