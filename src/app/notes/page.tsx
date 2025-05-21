@@ -11,34 +11,22 @@ import { PlusCircle, Trash2, Save, Edit, StickyNote, X, Loader2 } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { firestore } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, updateDoc, deleteDoc, doc, orderBy, serverTimestamp, Timestamp } from "firebase/firestore";
-import { useAuth } from '@/hooks/useAuth';
 import type { Locale } from 'date-fns';
 
 interface Note {
   id: string;
   title: string;
   content: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  userId: string;
+  createdAt: string; // Store as ISO string for localStorage
+  updatedAt: string; // Store as ISO string for localStorage
 }
 
-const formatTimestampSafe = (timestamp: Timestamp | null | undefined, formatString: string, options?: { locale?: Locale }): string => {
-    if (!timestamp) return '';
+const formatDisplayDate = (dateString: string | null | undefined, formatString: string, options?: { locale?: Locale }): string => {
+    if (!dateString) return '';
     try {
-        if (timestamp instanceof Timestamp) {
-          return format(timestamp.toDate(), formatString, options);
-        } else {
-           console.warn("formatTimestampSafe received non-Timestamp object:", timestamp);
-           if (timestamp instanceof Date) {
-              return format(timestamp, formatString, options);
-           }
-           return 'Data inválida';
-        }
+        return format(new Date(dateString), formatString, options);
     } catch (error) {
-        console.error("Error formatting timestamp:", error, timestamp);
+        console.error("Error formatting date string:", error, dateString);
         return 'Data inválida';
     }
 };
@@ -50,53 +38,37 @@ export default function NotesPage() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [currentTitle, setCurrentTitle] = useState("");
   const [currentContent, setCurrentContent] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // For initial load from localStorage
+  const [isSaving, setIsSaving] = useState(false); // For UI feedback during save/delete
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
   const titleInputRef = useRef<HTMLInputElement>(null);
 
+  // Load notes from localStorage on mount
   useEffect(() => {
-    if (authLoading) {
-        setIsLoading(true);
-        return;
+    setIsLoading(true);
+    try {
+      const storedNotes = localStorage.getItem("nexusmind_local_notes");
+      if (storedNotes) {
+        setNotes(JSON.parse(storedNotes));
+      }
+    } catch (e) {
+      console.error("Error loading notes from localStorage:", e);
+      toast({ title: "Erro ao Carregar Notas", description: "Não foi possível buscar suas notas salvas localmente.", variant: "destructive" });
     }
+    setIsLoading(false);
+  }, [toast]);
 
-    if (!user) {
-      setIsLoading(false);
-      setNotes([]);
-      return;
-    };
-
-    const fetchNotes = async () => {
-      if (!user || !firestore) {
-        setIsLoading(false);
-        if (!firestore) {
-            toast({ title: "Erro de Configuração", description: "O serviço de banco de dados não está disponível. Verifique a configuração do Firebase.", variant: "destructive" });
+  // Save notes to localStorage whenever they change
+  useEffect(() => {
+    if (!isLoading) { // Avoid saving during initial load
+        try {
+            localStorage.setItem("nexusmind_local_notes", JSON.stringify(notes));
+        } catch (e) {
+            console.error("Error saving notes to localStorage:", e);
+            toast({ title: "Erro ao Salvar Notas Localmente", description: "Não foi possível salvar suas notas no navegador.", variant: "destructive" });
         }
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const notesCol = collection(firestore, "notes");
-        const q = query(notesCol, where("userId", "==", user.uid), orderBy("updatedAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        const fetchedNotes = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...(doc.data() as Omit<Note, 'id'>),
-        }));
-        setNotes(fetchedNotes);
-      } catch (e: any) {
-        console.error("Error fetching notes from Firestore:", e);
-        toast({ title: "Erro ao Carregar Notas", description: `Não foi possível buscar suas notas. Detalhe: ${e.message}`, variant: "destructive" });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchNotes();
-  }, [user, authLoading, toast]);
+    }
+  }, [notes, isLoading, toast]);
 
   useEffect(() => {
     if (isAdding && titleInputRef.current) {
@@ -110,6 +82,9 @@ export default function NotesPage() {
     setEditingNoteId(null);
     setCurrentTitle("");
     setCurrentContent("");
+    if (titleInputRef.current) {
+        setTimeout(() => titleInputRef.current?.focus(), 0);
+    }
   };
 
   const startEditingNote = (note: Note) => {
@@ -126,104 +101,52 @@ export default function NotesPage() {
     setCurrentContent("");
   };
 
-  const handleSaveNote = async () => {
-    if (!user) {
-      toast({ title: "Erro", description: "Você precisa estar logado para salvar notas.", variant: "destructive" });
-      return;
-    }
+  const handleSaveNote = () => {
     if (!currentContent.trim() && !currentTitle.trim()) {
         toast({ title: "Nota Vazia", description: "A nota precisa ter um título ou conteúdo.", variant: "destructive" });
         return;
     }
-    if (!firestore) {
-        toast({ title: "Erro de Configuração", description: "O banco de dados não está disponível. Verifique a configuração do Firebase e as regras de segurança.", variant: "destructive" });
-        return;
-    }
 
-    const now = serverTimestamp();
+    setIsSaving(true);
+    const now = new Date().toISOString();
     const trimmedTitle = currentTitle.trim();
     const trimmedContent = currentContent.trim();
 
-    setIsSaving(true);
-
-    try {
-      if (editingNoteId) {
-        const noteRef = doc(firestore, "notes", editingNoteId);
-        await updateDoc(noteRef, {
-          title: trimmedTitle,
-          content: trimmedContent,
-          updatedAt: now,
-        });
-         setNotes(notes.map((note) =>
-             note.id === editingNoteId
-               ? { ...note, title: trimmedTitle, content: trimmedContent, updatedAt: Timestamp.now() } 
-               : note
-           ).sort((a, b) => b.updatedAt.toMillis() - a.updatedAt.toMillis())
-         );
-        toast({ title: "Nota Atualizada", description: "Suas alterações foram salvas." });
-      } else {
-        const newNoteData = {
-          userId: user.uid,
-          title: trimmedTitle || `Nota ${format(new Date(), 'dd/MM/yy HH:mm', { locale: ptBR })}`,
-          content: trimmedContent,
-          createdAt: now,
-          updatedAt: now,
-        };
-        const docRef = await addDoc(collection(firestore, "notes"), newNoteData);
-         const addedNoteClient: Note = {
-           userId: newNoteData.userId,
-           title: newNoteData.title,
-           content: newNoteData.content,
-           id: docRef.id,
-           createdAt: Timestamp.now(), 
-           updatedAt: Timestamp.now(),
-         };
-         setNotes([addedNoteClient, ...notes].sort((a, b) => b.updatedAt.toMillis() - a.updatedAt.toMillis()));
-        toast({ title: "Nota Salva", description: "Sua nova nota foi adicionada." });
-      }
-      cancelEditing();
-    } catch (error: any) {
-       console.error("Detailed error saving note:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
-       toast({ 
-         title: "Erro ao Salvar Nota", 
-         description: `Não foi possível salvar. Detalhe: ${error.message}. Verifique o console para mais informações e confira suas regras de segurança do Firestore.`, 
-         variant: "destructive",
-         duration: 9000,
-        });
-    } finally {
-        setIsSaving(false);
+    if (editingNoteId) {
+      setNotes(prevNotes =>
+        prevNotes.map((note) =>
+          note.id === editingNoteId
+            ? { ...note, title: trimmedTitle, content: trimmedContent, updatedAt: now }
+            : note
+        ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      );
+      toast({ title: "Nota Atualizada", description: "Suas alterações foram salvas." });
+    } else {
+      const newNote: Note = {
+        id: Date.now().toString(),
+        title: trimmedTitle || `Nota ${format(new Date(), 'dd/MM/yy HH:mm', { locale: ptBR })}`,
+        content: trimmedContent,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setNotes(prevNotes => [newNote, ...prevNotes].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()));
+      toast({ title: "Nota Salva", description: "Sua nova nota foi adicionada." });
     }
+    cancelEditing();
+    setIsSaving(false);
   };
 
-  const handleDeleteNote = async (id: string) => {
-    if (!user || !firestore) {
-      toast({ title: "Erro", description: "Usuário não logado ou banco de dados indisponível.", variant: "destructive" });
-      return;
-    }
-
+  const handleDeleteNote = (id: string) => {
     const noteToDelete = notes.find(note => note.id === id);
     if (!noteToDelete) return;
 
     setIsSaving(true);
-    try {
-      const noteRef = doc(firestore, "notes", id);
-      await deleteDoc(noteRef);
-      setNotes(notes.filter((note) => note.id !== id));
-      toast({ title: "Nota Removida", description: `"${noteToDelete.title}" foi removida.`, variant: "destructive" });
-       if (editingNoteId === id) {
-         cancelEditing();
-       }
-    } catch (error: any) {
-       console.error("Detailed error deleting note:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
-       toast({ 
-         title: "Erro ao Excluir Nota", 
-         description: `Não foi possível remover. Detalhe: ${error.message}. Verifique o console e suas regras de segurança do Firestore.`, 
-         variant: "destructive",
-         duration: 9000,
-        });
-    } finally {
-        setIsSaving(false);
+    setNotes(prevNotes => prevNotes.filter((note) => note.id !== id));
+    toast({ title: "Nota Removida", description: `"${noteToDelete.title}" foi removida.`, variant: "destructive" });
+    if (editingNoteId === id) {
+      cancelEditing();
     }
+    setIsSaving(false);
   };
 
   const activeFormKey = editingNoteId || (isAdding ? 'new-note-form' : 'no-form');
@@ -233,13 +156,13 @@ export default function NotesPage() {
         <Card className="shadow-lg rounded-xl overflow-hidden bg-gradient-to-br from-card via-background to-card/80">
             <CardHeader className="pb-2">
                <CardTitle className="text-2xl font-bold text-primary flex items-center gap-2">
-                   <StickyNote className="w-6 h-6" /> Minhas Notas
+                   <StickyNote className="w-6 h-6" /> Minhas Notas Locais
                </CardTitle>
-               <CardDescription>Seu espaço pessoal para anotações e pensamentos.</CardDescription>
+               <CardDescription>Seu espaço pessoal para anotações e pensamentos, salvos no seu navegador.</CardDescription>
             </CardHeader>
             <CardContent className="flex items-center justify-between">
                 <p className="text-muted-foreground">Capture ideias, sentimentos ou lembretes.</p>
-                 {user && !isAdding && !editingNoteId && (
+                 {!isAdding && !editingNoteId && (
                     <Button size="sm" onClick={startAddingNote} disabled={isLoading || isSaving}>
                         <PlusCircle className="w-4 h-4 mr-2" /> Nova Nota
                     </Button>
@@ -247,21 +170,7 @@ export default function NotesPage() {
             </CardContent>
         </Card>
 
-        {authLoading && (
-            <div className="flex justify-center items-center p-8">
-                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                 <p className="ml-2 text-muted-foreground">Verificando autenticação...</p>
-             </div>
-        )}
-
-        {!user && !authLoading && (
-           <Card className="shadow-md rounded-xl text-center p-6 bg-secondary/30">
-              <CardTitle>Login Necessário</CardTitle>
-              <CardDescription>Faça login para criar e visualizar suas notas.</CardDescription>
-           </Card>
-        )}
-
-        {user && (isAdding || editingNoteId) && (
+        {(isAdding || editingNoteId) && (
            <Card className="shadow-md rounded-xl" key={activeFormKey}>
              <CardHeader>
                 <CardTitle>{editingNoteId ? 'Editar Nota' : 'Adicionar Nova Nota'}</CardTitle>
@@ -274,9 +183,9 @@ export default function NotesPage() {
                     id="note-title"
                     value={currentTitle}
                     onChange={(e) => setCurrentTitle(e.target.value)}
-                    placeholder={`Ex: Ideias Reunião, Sentimentos ${format(Date.now(), 'dd/MM', { locale: ptBR })}`}
+                    placeholder={`Ex: Ideias Reunião, Sentimentos ${format(new Date(), 'dd/MM', { locale: ptBR })}`}
                     disabled={isSaving}
-                    autoFocus={isAdding} // Autofocus when adding a new note
+                    autoFocus={isAdding}
                   />
                 </div>
                 <div>
@@ -307,12 +216,12 @@ export default function NotesPage() {
            </Card>
          )}
 
-        {user && !isAdding && !editingNoteId && (
+        {!isAdding && !editingNoteId && (
           <div className="space-y-4">
-            {isLoading && !authLoading ? ( 
+            {isLoading ? (
                 <div className="flex justify-center items-center p-8">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="ml-2 text-muted-foreground">Carregando notas...</p>
+                    <p className="ml-2 text-muted-foreground">Carregando notas do navegador...</p>
                 </div>
             ) : !isLoading && notes.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Nenhuma nota encontrada. Clique em "Nova Nota" para começar.</p>
@@ -321,9 +230,9 @@ export default function NotesPage() {
                   <Card key={note.id} className="shadow-md rounded-lg hover:shadow-lg transition-shadow">
                     <CardHeader className="flex flex-row justify-between items-start gap-2 pb-2">
                        <div>
-                           <CardTitle className="text-lg">{note.title || `Nota ${formatTimestampSafe(note.createdAt, 'dd/MM/yy', { locale: ptBR })}`}</CardTitle>
+                           <CardTitle className="text-lg">{note.title || `Nota ${formatDisplayDate(note.createdAt, 'dd/MM/yy', { locale: ptBR })}`}</CardTitle>
                            <CardDescription className="text-xs">
-                             Última atualização: {formatTimestampSafe(note.updatedAt, 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                             Última atualização: {formatDisplayDate(note.updatedAt, 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                            </CardDescription>
                        </div>
                        <div className="flex gap-1">
@@ -348,6 +257,9 @@ export default function NotesPage() {
             )}
           </div>
         )}
+        <p className="text-xs text-muted-foreground text-center mt-4">
+            Suas notas são salvas apenas neste navegador. Limpar os dados do navegador pode removê-las.
+        </p>
      </div>
   );
 }
