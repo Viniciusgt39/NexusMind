@@ -4,7 +4,8 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock as ClockIcon } from 'lucide-react'; // Import clock icon
+// ClockIcon is no longer needed for display
+// import { Clock as ClockIcon } from 'lucide-react'; 
 
 export default function Clock() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
@@ -22,17 +23,10 @@ export default function Clock() {
     return () => clearInterval(intervalId);
   }, []); // Empty dependency array ensures this runs only once on mount
 
-  if (currentTime === null) {
-    // Render placeholder or null during initial server render / before hydration
-    return <div className="text-xs text-muted-foreground tabular-nums w-24 text-right">--:--:--</div>; // Placeholder width
-  }
-
-  return (
-    <div className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
-        <ClockIcon className="w-3 h-3" />
-        <span>
-            {format(currentTime, 'dd/MM/yy HH:mm:ss', { locale: ptBR })}
-        </span>
-    </div>
-  );
+  // Component will no longer render anything visible
+  // The currentTime state is still updated and could be theoretically accessed 
+  // by other parts of the application if this component exposed it via context or props,
+  // but currently it's self-contained.
+  // The primary effect of this change is to remove the visual display of the clock.
+  return null;
 }
