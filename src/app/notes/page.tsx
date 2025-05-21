@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +54,7 @@ export default function NotesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (authLoading) {
@@ -96,6 +97,12 @@ export default function NotesPage() {
 
     fetchNotes();
   }, [user, authLoading, toast]);
+
+  useEffect(() => {
+    if (isAdding && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [isAdding]);
 
 
   const startAddingNote = () => {
@@ -219,7 +226,7 @@ export default function NotesPage() {
     }
   };
 
-  const activeNote = editingNoteId ? notes.find(n => n.id === editingNoteId) : (isAdding ? { id: 'new', title: '', content: '', createdAt: Timestamp.now(), updatedAt: Timestamp.now(), userId: user?.uid ?? '' } : null);
+  const activeFormKey = editingNoteId || (isAdding ? 'new-note-form' : 'no-form');
 
   return (
     <div className="space-y-8">
@@ -254,8 +261,8 @@ export default function NotesPage() {
            </Card>
         )}
 
-        {user && (isAdding || editingNoteId) && activeNote && (
-           <Card className="shadow-md rounded-xl">
+        {user && (isAdding || editingNoteId) && (
+           <Card className="shadow-md rounded-xl" key={activeFormKey}>
              <CardHeader>
                 <CardTitle>{editingNoteId ? 'Editar Nota' : 'Adicionar Nova Nota'}</CardTitle>
              </CardHeader>
@@ -263,11 +270,13 @@ export default function NotesPage() {
                 <div>
                   <Label htmlFor="note-title">Título (Opcional)</Label>
                   <Input
+                    ref={titleInputRef}
                     id="note-title"
                     value={currentTitle}
                     onChange={(e) => setCurrentTitle(e.target.value)}
                     placeholder={`Ex: Ideias Reunião, Sentimentos ${format(Date.now(), 'dd/MM', { locale: ptBR })}`}
                     disabled={isSaving}
+                    autoFocus={isAdding} // Autofocus when adding a new note
                   />
                 </div>
                 <div>
