@@ -1,11 +1,12 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Paintbrush, Thermometer, BedDouble, Move } from "lucide-react";
-import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line, BarChart, Bar } from 'recharts'; // Removed Tooltip as ChartTooltip is used
-import { ChartTooltipContent, ChartContainer, ChartTooltip } from '@/components/ui/chart'; // Added ChartTooltip import
+import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Line, BarChart, Bar } from 'recharts';
+import { ChartTooltipContent, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -39,18 +40,15 @@ const movementChartConfig = { steps: { label: "Passos", color: "hsl(var(--primar
 
 export default function BraceletPage() {
   const [selectedColor, setSelectedColor] = useState<string>("preto");
-  const [bodyTemp, setBodyTemp] = useState<number | null>(null); // State for real-time temp simulation
-  const [sleepSummary, setSleepSummary] = useState<{ total: number; quality: string } | null>(null); // State for sleep summary simulation
-  const [stepsToday, setStepsToday] = useState<number | null>(null); // State for steps simulation
+  const [bodyTemp, setBodyTemp] = useState<number | null>(null);
+  const [sleepSummary, setSleepSummary] = useState<{ total: number; quality: string } | null>(null);
+  const [stepsToday, setStepsToday] = useState<number | null>(null);
 
-  // Simulate real-time data updates (Client-side only)
    useEffect(() => {
-      // Simulate Body Temperature (oscillates slightly)
       const tempInterval = setInterval(() => {
-         setBodyTemp(+(36.5 + (Math.random() * 0.5 - 0.25)).toFixed(1)); // Simulate slight fluctuation around 36.5°C
-      }, 5000); // Update every 5 seconds
+         setBodyTemp(+(36.5 + (Math.random() * 0.5 - 0.25)).toFixed(1));
+      }, 5000);
 
-      // Simulate fetching Sleep Summary once
       setTimeout(() => {
         const totalHours = sleepChartData.reduce((sum, stage) => sum + stage.duration, 0);
         const deepSleepRatio = (sleepChartData.find(s => s.stage === "Profundo")?.duration ?? 0) / totalHours;
@@ -58,7 +56,6 @@ export default function BraceletPage() {
         setSleepSummary({ total: totalHours, quality });
       }, 1500);
 
-      // Simulate fetching Steps Today once
       setTimeout(() => {
          setStepsToday(movementChartData.reduce((sum, hour) => sum + hour.steps, 0));
       }, 2000);
@@ -66,12 +63,12 @@ export default function BraceletPage() {
 
       return () => {
          clearInterval(tempInterval);
-      }; // Cleanup intervals
+      };
    }, []);
 
 
   const braceletColors = [
-    { value: "preto", label: "Preto Clássico", color: "#333333" },
+    { value: "preto", label: "Desligar", color: "#A3A3A3" }, // Alterado aqui
     { value: "azul", label: "Azul Meia-noite", color: "#191970" },
     { value: "verde", label: "Verde Musgo", color: "#8FBC8F" },
     { value: "rosa", label: "Rosa Claro", color: "#FFB6C1" },
@@ -209,3 +206,4 @@ export default function BraceletPage() {
     </div>
   );
 }
+
