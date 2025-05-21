@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react'; // Ensure React is imported
+import React from 'react';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,7 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar, // Import useSidebar
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,28 +22,27 @@ import {
   Settings,
   BarChart3,
   CalendarPlus,
-  Brain,
+  Brain, // Using Brain as placeholder for stethoscope
   LogOut,
   LogIn,
   Menu,
   ChevronLeft,
+  Home // Added Home icon for Dashboard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from '@/hooks/useAuth';
-import { SheetTitle } from "@/components/ui/sheet"; // Import SheetTitle for mobile accessibility
+import { SheetTitle } from "@/components/ui/sheet";
 
-
-// Reordered menu items for priority
+// Adapted menu items to match NexusView style, mapping existing functionalities
 const menuItems = [
-  { href: "/bracelet", label: "Dispositivo", icon: Watch },
-  { href: "/timeline", label: "Linha do Tempo", icon: BarChart3 },
-  { href: "/profile", label: "Perfil", icon: User },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/", label: "Dashboard", icon: Home }, // Início maps to Dashboard
+  { href: "/bracelet", label: "Dispositivo", icon: Watch }, // Keep Dispositivo
+  { href: "/timeline", label: "Relatórios", icon: BarChart3 }, // Linha do Tempo maps to Relatórios
+  { href: "/settings", label: "Configurações", icon: Settings }, // Keep Configurações
 ];
 
-// Custom SidebarTrigger using Menu icon or ChevronLeft
 const CustomSidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
@@ -56,7 +55,7 @@ const CustomSidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-8 w-8", className)}
+      className={cn("h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
@@ -74,7 +73,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { toast } = useToast();
   const { user, login, logout } = useAuth();
-  const { open, openMobile, setOpenMobile, isMobile } = useSidebar(); // Get isMobile from useSidebar
+  const { open, openMobile, setOpenMobile, isMobile } = useSidebar();
 
   const handleScheduleAppointment = () => {
     toast({
@@ -86,7 +85,7 @@ export function AppSidebar() {
      }
   };
 
-    const handleLogoutClick = () => {
+  const handleLogoutClick = () => {
      logout();
      toast({
        title: "Logout Realizado",
@@ -100,10 +99,10 @@ export function AppSidebar() {
 
    const handleLoginClick = () => {
      login();
-     toast({
-       title: "Login Simulado",
-       description: "Você está agora conectado como usuário simulado.",
-     });
+     // toast({
+     //   title: "Login Simulado",
+     //   description: "Você está agora conectado como usuário simulado.",
+     // });
      if (openMobile) {
        setOpenMobile(false);
      }
@@ -113,25 +112,22 @@ export function AppSidebar() {
   return (
     <Sidebar
       side="left"
-      variant="sidebar"
+      variant="sidebar" // Keep this variant for the desired structure
       collapsible="icon"
-      className="border-r border-sidebar-border"
+      className="border-r border-sidebar-border bg-sidebar-background" // Use new sidebar colors
     >
-      <SidebarHeader className="flex items-center justify-between p-2 h-14">
-        {/* Logo/Title visible when expanded (desktop) or on mobile sheet header */}
-        {/* This outer div handles visibility for desktop collapsed state using group-data properties */}
+      <SidebarHeader className="flex items-center justify-between p-3 h-16 border-b border-sidebar-border">
         <div className={cn(
             "flex items-center gap-2 transition-opacity duration-200",
             open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0"
         )}>
-            <Brain className="w-6 h-6 text-primary shrink-0" />
+            <Brain className="w-7 h-7 text-sidebar-primary shrink-0" />
             {isMobile ? (
-                <SheetTitle className="font-semibold text-lg text-sidebar-foreground whitespace-nowrap">
+                <SheetTitle className="font-semibold text-xl text-sidebar-foreground whitespace-nowrap">
                     NexusMind
                 </SheetTitle>
             ) : (
-                // For desktop, just a div. The parent div's classes handle its visibility when collapsed.
-                <div className="font-semibold text-lg text-sidebar-foreground whitespace-nowrap">
+                <div className="font-semibold text-xl text-sidebar-foreground whitespace-nowrap">
                     NexusMind
                 </div>
             )}
@@ -139,23 +135,6 @@ export function AppSidebar() {
         <CustomSidebarTrigger className="ml-auto hidden md:flex" />
       </SidebarHeader>
 
-       {/* User Info Section - Moved below header */}
-       {user && (
-        <div className={cn("p-2 border-b border-sidebar-border transition-opacity duration-200 pb-4", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
-            <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8 shrink-0">
-                <AvatarImage src={user.photoURL || "/placeholder-user.png"} alt="Avatar do Usuário" data-ai-hint="person silhouette"/>
-                <AvatarFallback>{user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
-            </Avatar>
-            <div className="text-xs overflow-hidden">
-                <p className="font-medium text-sidebar-foreground whitespace-nowrap truncate">{user.displayName || "Usuário"}</p>
-                <p className="text-muted-foreground whitespace-nowrap truncate">{user.email || ""}</p>
-            </div>
-            </div>
-        </div>
-       )}
-
-      {/* Content: Menus and Buttons */}
       <SidebarContent className="p-2 flex-1 overflow-y-auto">
         <SidebarMenu>
           {menuItems.map((item) => {
@@ -166,7 +145,10 @@ export function AppSidebar() {
                    <SidebarMenuButton
                       isActive={isActive}
                       tooltip={item.label}
-                      className="justify-start"
+                      className={cn(
+                        "justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground relative",
+                        isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium after:content-[''] after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:h-2/3 after:w-1 after:bg-sidebar-active-border after:rounded-r-sm"
+                      )}
                       onClick={() => openMobile && setOpenMobile(false)}
                     >
                      <item.icon className="w-5 h-5 shrink-0" />
@@ -179,7 +161,7 @@ export function AppSidebar() {
             );
           })}
 
-          <Separator className="my-2 bg-sidebar-border/50" />
+          <Separator className="my-3 bg-sidebar-border/50" />
 
            <SidebarMenuItem>
               <SidebarMenuButton
@@ -199,37 +181,39 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      {/* Footer with Login/Logout */}
-      <SidebarFooter className="p-2 border-t border-sidebar-border">
-         <SidebarMenu className="flex-grow">
-           {user ? (
-               <SidebarMenuItem>
-                  <SidebarMenuButton
-                      onClick={handleLogoutClick}
-                      tooltip="Sair"
-                      className="justify-start text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive w-full"
-                  >
-                      <LogOut className="w-5 h-5 shrink-0" />
-                      <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
-                      Sair
-                      </span>
-                  </SidebarMenuButton>
-               </SidebarMenuItem>
-            ) : (
-               <SidebarMenuItem>
-                  <SidebarMenuButton
-                      onClick={handleLoginClick}
-                      tooltip="Entrar (Simulado)"
-                      className="justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full"
-                  >
-                      <LogIn className="w-5 h-5 shrink-0" />
-                      <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
-                         Entrar (Simulado)
-                      </span>
-                  </SidebarMenuButton>
-               </SidebarMenuItem>
-            )}
-         </SidebarMenu>
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
+         {user ? (
+            <div className={cn("transition-opacity duration-200 w-full", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+                <div className="flex items-center gap-2">
+                <Avatar className="w-9 h-9 shrink-0">
+                    <AvatarImage src={user.photoURL || "/placeholder-user.png"} alt="Avatar do Usuário" data-ai-hint="person silhouette"/>
+                    <AvatarFallback>{user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="text-xs overflow-hidden">
+                    <p className="font-medium text-sidebar-foreground whitespace-nowrap truncate">{user.displayName || "Usuário"}</p>
+                    <p className="text-muted-foreground whitespace-nowrap truncate text-sidebar-foreground/70">{user.email || "Médico"}</p>
+                </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleLogoutClick} className="w-full justify-start mt-2 text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive">
+                    <LogOut className="w-4 h-4 mr-2"/> Sair
+                </Button>
+            </div>
+         ) : (
+           <SidebarMenu className="w-full">
+             <SidebarMenuItem>
+                <SidebarMenuButton
+                    onClick={handleLoginClick}
+                    tooltip="Entrar (Simulado)"
+                    className="justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full"
+                >
+                    <LogIn className="w-5 h-5 shrink-0" />
+                    <span className={cn("whitespace-nowrap transition-opacity duration-200", open ? "opacity-100" : "opacity-0 pointer-events-none group-data-[collapsible=icon]:opacity-0")}>
+                       Entrar
+                    </span>
+                </SidebarMenuButton>
+             </SidebarMenuItem>
+           </SidebarMenu>
+         )}
       </SidebarFooter>
     </Sidebar>
   );

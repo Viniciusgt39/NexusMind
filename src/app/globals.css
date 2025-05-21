@@ -9,101 +9,103 @@ body {
 
 @layer base {
   :root {
-    /* Modernized Theme - Slightly Muted Tones, Increased Roundness */
-    --background: 210 40% 98%; /* Very light cool gray */
-    --foreground: 215 25% 25%; /* Dark desaturated blue */
+    /* NexusView Inspired Theme - Light, Clean, Teal Primary */
+    --background: 220 30% 96%; /* Very light gray for main content background */
+    --foreground: 220 10% 25%; /* Dark gray for text */
 
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 215 25% 25%; /* Dark desaturated blue */
+    --card: 0 0% 100%; /* White for cards */
+    --card-foreground: 220 10% 25%; /* Dark gray for card text */
 
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 215 25% 25%; /* Dark desaturated blue */
+    --popover-foreground: 220 10% 25%;
 
-    --primary: 205 45% 55%; /* #6A94C1 - Slightly softer blue */
+    --primary: 180 45% 45%; /* Teal/Blue primary color (e.g., HSL for #409A9A or similar) */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 210 40% 94%; /* Light cool gray */
-    --secondary-foreground: 215 20% 45%; /* Medium-dark desaturated blue */
+    --secondary: 220 25% 92%; /* Lighter gray for secondary elements */
+    --secondary-foreground: 220 10% 35%; /* Slightly lighter dark gray */
 
-    --muted: 210 40% 90%; /* Slightly darker cool gray */
-    --muted-foreground: 215 15% 55%; /* Medium desaturated blue */
+    --muted: 220 20% 88%; /* Muted gray */
+    --muted-foreground: 220 15% 50%; /* Muted text */
 
-    --accent: 130 25% 68%; /* #8FBCAD - Softer green */
-    --accent-foreground: 215 25% 25%; /* Dark desaturated blue for contrast */
+    --accent: 175 40% 60%; /* Lighter teal or complementary accent */
+    --accent-foreground: 220 10% 20%; /* Dark text for accent contrast */
 
     --destructive: 0 72% 51%; /* Standard destructive red */
-    --destructive-foreground: 0 0% 98%; /* Light foreground for destructive */
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 210 30% 88%; /* Lighter border */
-    --input: 210 30% 92%; /* Slightly darker input background */
-    --ring: 205 45% 55%; /* Primary color for focus rings */
+    --border: 220 20% 90%; /* Light border color */
+    --input: 220 30% 94%; /* Light input background */
+    --ring: 180 45% 45%; /* Primary color for focus rings */
 
-    --radius: 0.75rem; /* Increased radius for more rounded corners */
+    --radius: 0.5rem; /* Standard radius */
 
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 180 45% 45%; /* Primary Teal */
+    --chart-2: 170 35% 55%; /* Softer Teal */
+    --chart-3: 210 30% 60%; /* Soft Blue */
+    --chart-4: 30 80% 60%; /* Orange/Yellow for contrast in charts if needed */
+    --chart-5: 0 60% 65%; /* Soft Red for contrast if needed */
 
-    /* Sidebar specific colors - ensure good contrast */
-    --sidebar-background: 210 20% 92%; /* Slightly darker sidebar */
-    --sidebar-foreground: 215 25% 20%; /* Darker text for sidebar */
-    --sidebar-primary: 205 45% 55%; /* Same as main primary */
+    /* Sidebar specific colors - NexusView style */
+    --sidebar-background: 220 20% 98%; /* Very light gray, almost white */
+    --sidebar-foreground: 220 10% 20%; /* Dark text for sidebar */
+    --sidebar-primary: 180 45% 45%; /* Teal */
     --sidebar-primary-foreground: 0 0% 100%; /* White */
-    --sidebar-accent: 130 25% 68%; /* Same as main accent */
-    --sidebar-accent-foreground: 215 25% 20%; /* Darker text for sidebar accent */
-    --sidebar-border: 210 20% 85%; /* Sidebar border */
-    --sidebar-ring: 205 45% 55%; /* Primary */
+    --sidebar-accent: 180 45% 90%; /* Light teal for active/hover background */
+    --sidebar-accent-foreground: 180 45% 30%; /* Darker teal for text on accent */
+    --sidebar-border: 220 20% 88%; /* Slightly darker border for sidebar elements if needed */
+    --sidebar-ring: 180 45% 45%; /* Teal */
+    --sidebar-active-border: 180 50% 40%; /* Teal for active left border */
   }
 
   .dark {
-     /* Define dark mode variables - refined for better contrast */
-     --background: 215 28% 17%; /* Dark blue-gray */
-     --foreground: 210 40% 96%; /* Light cool gray */
+     /* Dark mode for NexusView - keeping it consistent with a darker theme if enabled */
+     --background: 220 15% 15%; /* Dark slate gray */
+     --foreground: 220 20% 90%; /* Light gray text */
 
-     --card: 215 25% 22%; /* Slightly lighter dark blue-gray */
-     --card-foreground: 210 40% 96%; /* Light cool gray */
+     --card: 220 15% 20%; /* Darker card background */
+     --card-foreground: 220 20% 90%;
 
-     --popover: 215 30% 15%; /* Darker popover */
-     --popover-foreground: 210 40% 96%; /* Light cool gray */
+     --popover: 220 15% 18%; /* Darker popover */
+     --popover-foreground: 220 20% 90%;
 
-     --primary: 205 55% 65%; /* Brighter primary for dark mode */
-     --primary-foreground: 215 20% 15%; /* Darker text on primary */
+     --primary: 180 50% 55%; /* Brighter Teal for dark mode */
+     --primary-foreground: 0 0% 10%; /* Dark text on primary */
 
-     --secondary: 215 20% 25%; /* Dark secondary */
-     --secondary-foreground: 210 35% 85%; /* Medium-light cool gray */
+     --secondary: 220 15% 25%; /* Dark secondary */
+     --secondary-foreground: 220 20% 80%;
 
-     --muted: 215 20% 28%; /* Darker muted */
-     --muted-foreground: 210 30% 70%; /* Medium cool gray */
+     --muted: 220 15% 30%; /* Darker muted */
+     --muted-foreground: 220 20% 65%;
 
-     --accent: 130 35% 70%; /* Brighter accent for dark mode */
-     --accent-foreground: 215 20% 15%; /* Darker text on accent */
+     --accent: 175 45% 65%; /* Brighter accent */
+     --accent-foreground: 0 0% 10%;
 
-     --destructive: 0 65% 55%; /* Slightly brighter destructive */
-     --destructive-foreground: 0 0% 98%; /* Light foreground */
+     --destructive: 0 60% 55%;
+     --destructive-foreground: 0 0% 98%;
 
-     --border: 215 20% 35%; /* Dark border */
-     --input: 215 20% 30%; /* Dark input background */
-     --ring: 205 55% 65%; /* Primary ring color */
+     --border: 220 15% 35%;
+     --input: 220 15% 30%;
+     --ring: 180 50% 55%;
 
-     --radius: 0.75rem;
+     --radius: 0.5rem;
 
-     --chart-1: 12 70% 70%;
-     --chart-2: 173 50% 50%;
-     --chart-3: 197 30% 40%;
-     --chart-4: 43 70% 75%;
-     --chart-5: 27 80% 75%;
+     --chart-1: 180 50% 55%;
+     --chart-2: 170 40% 65%;
+     --chart-3: 210 35% 70%;
+     --chart-4: 30 70% 70%;
+     --chart-5: 0 50% 70%;
 
      /* Sidebar specific dark colors */
-     --sidebar-background: 215 25% 20%; /* Dark sidebar */
-     --sidebar-foreground: 210 40% 94%; /* Light text */
-     --sidebar-primary: 205 55% 65%; /* Brighter primary */
-     --sidebar-primary-foreground: 215 20% 15%; /* Darker text */
-     --sidebar-accent: 130 35% 70%; /* Brighter accent */
-     --sidebar-accent-foreground: 215 20% 15%; /* Darker text */
-     --sidebar-border: 215 20% 30%; /* Darker border */
-     --sidebar-ring: 205 55% 65%; /* Primary */
+     --sidebar-background: 220 10% 12%; /* Very dark sidebar */
+     --sidebar-foreground: 220 20% 85%; /* Light text */
+     --sidebar-primary: 180 50% 55%;
+     --sidebar-primary-foreground: 0 0% 10%;
+     --sidebar-accent: 180 50% 25%; /* Darker teal for active/hover background */
+     --sidebar-accent-foreground: 180 50% 75%; /* Lighter teal for text on accent */
+     --sidebar-border: 220 10% 25%;
+     --sidebar-ring: 180 50% 55%;
+     --sidebar-active-border: 180 55% 50%;
    }
 }
 
