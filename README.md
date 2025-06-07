@@ -1,31 +1,30 @@
 # Firebase Studio
 
-This is a NextJS starter in Firebase Studio.
+Este é um projeto inicial com NextJS no Firebase Studio. Usando o Gemini AI para auxiliar na construção do projeto
 
-To get started, take a look at src/app/page.tsx.
+Para começar, dê uma olhada em src/app/page.tsx.
 
-## Running the Development Server
+## Rodando o servidor
 
-To run the development server:
+Para rodar o servidor de desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-This will start the app, usually on port 9002. Open [http://localhost:9002](http://localhost:9002) in your browser.
+Isso iniciará o app, geralmente na porta 9002. Abra [http://localhost:9002](http://localhost:9002) no seu navegador.
 
-## Accessing on Mobile
 
-You can access the running development server from a mobile device on the same network:
+## Acessando no celular
 
-1.  **Find your computer's local IP address:**
-    *   **Windows:** Open Command Prompt (`cmd`) and type `ipconfig`. Look for the IPv4 address under your active network adapter (e.g., Wi-Fi or Ethernet).
-    *   **macOS:** Open Terminal and type `ifconfig | grep "inet "`. Look for the address usually starting with `192.168.x.x` or `10.x.x.x`.
-    *   **Linux:** Open Terminal and type `ip addr show`. Look for the `inet` address under your active network interface.
-2.  **Connect your mobile device:** Ensure your phone or tablet is connected to the same Wi-Fi network as your computer.
-3.  **Open the browser:** On your mobile device, open a web browser and navigate to `http://<your_computer_ip>:9002` (replace `<your_computer_ip>` with the IP address you found).
-4.  **Firewall:** If you can't connect, check if your computer's firewall is blocking incoming connections on port 9002. You may need to create a rule to allow traffic on this port.
+Você pode acessar o servidor de desenvolvimento em execução a partir de um dispositivo móvel na mesma rede:
+
+1.  **Encontre o endereço IP local do seu computador:**
+    *   **Windows:** Abra o Prompt de Comando (`cmd`) e digite `ipconfig`. Procure o endereço IPv4 do adaptador de rede ativo (por exemplo, Wi-Fi ou Ethernet).
+2.  **Conecte seu dispositivo móvel:** Certifique-se de que seu celular ou tablet está conectado à mesma rede Wi-Fi que o seu computador.
+3.  **Abra seu navegador:** No seu dispositivo móvel, abra um navegador e acesse `http://<your_computer_ip>:9002` (substitua `<your_computer_ip>` pelo endereço IP que você encontrou).
+4.  **Firewall:** Se não conseguir se conectar, verifique se o firewall do seu computador está bloqueando conexões na porta 9002. Pode ser necessário criar uma regra permitindo tráfego nessa porta.
 
 ## Deployment
 
-If the application is deployed to a hosting provider (like Firebase Hosting, Vercel, Netlify, etc.), you can access it on mobile simply by navigating to its public URL in your mobile browser.
+Se o aplicativo for implantado em um provedor de hospedagem (como Firebase Hosting, Vercel, Netlify, etc.), você poderá acessá-lo no celular simplesmente navegando até sua URL pública no navegador do dispositivo móvel.
