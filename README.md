@@ -1,6 +1,6 @@
 # Firebase Studio
 
-Este é um projeto inicial com NextJS no Firebase Studio. Usando o Gemini AI para auxiliar na construção do projeto
+Este é um projeto inicial com NextJS no Firebase Studio. Usando o Gemini AI para auxiliar na construção do projeto.
 
 Para começar, dê uma olhada em src/app/page.tsx.
 
